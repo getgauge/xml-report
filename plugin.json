@@ -1,0 +1,16 @@
+{
+    "id" : "xml-report",
+    "version" : "0.0.1",
+    "name" : "Xml Report",
+    "description" : "Xml reporting plugin",
+    "command" : {
+        "windows" : ["bin/xml-report"],
+        "linux" : ["bin/xml-report"],
+        "darwin" : ["bin/xml-report"]
+    },
+    "scope" : ["Execution"],
+    "gaugeVersionSupport": {
+        "minimum": "0.0.5",
+        "maximum": ""
+    }
+}
