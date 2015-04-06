@@ -18,7 +18,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
@@ -43,74 +42,10 @@ const (
 	overwriteReportsEnvProperty = "overwrite_reports"
 	resultFile                  = "result.xml"
 	timeFormat                  = "2013-05-24T10:23:58"
-	hostname                    = "HOSTNAME"
 )
 
 var projectRoot string
 var pluginDir string
-
-// JUnitTestSuites is a collection of JUnit test suites.
-type JUnitTestSuites struct {
-	XMLName xml.Name `xml:"testsuites"`
-	Suites  []JUnitTestSuite
-}
-
-// JUnitTestSuite is a single JUnit test suite which may contain many
-// testcases.
-type JUnitTestSuite struct {
-	XMLName      xml.Name        `xml:"testsuite"`
-	Id           int             `xml:"id,attr"`
-	Tests        int             `xml:"tests,attr"`
-	Failures     int             `xml:"failures,attr"`
-	Package      string          `xml:"package,attr"`
-	Time         string          `xml:"time,attr"`
-	Timestamp    string          `xml:"timestamp,attr"`
-	Name         string          `xml:"name,attr"`
-	Errors       int             `xml:"errors,attr"`
-	Hostname     string          `xml:"hostname,attr"`
-	Properties   []JUnitProperty `xml:"properties>property,omitempty"`
-	TestCases    []JUnitTestCase
-	SystemOutput SystemOut
-	SystemError  SystemErr
-}
-
-// JUnitTestCase is a single test case with its result.
-type JUnitTestCase struct {
-	XMLName     xml.Name          `xml:"testcase"`
-	Classname   string            `xml:"classname,attr"`
-	Name        string            `xml:"name,attr"`
-	Time        string            `xml:"time,attr"`
-	SkipMessage *JUnitSkipMessage `xml:"skipped,omitempty"`
-	Failure     *JUnitFailure     `xml:"failure,omitempty"`
-}
-
-type SystemOut struct {
-	XMLName  xml.Name `xml:"system-out"`
-	Contents string   `xml:",chardata"`
-}
-
-type SystemErr struct {
-	XMLName  xml.Name `xml:"system-err"`
-	Contents string   `xml:",chardata"`
-}
-
-// JUnitSkipMessage contains the reason why a testcase was skipped.
-type JUnitSkipMessage struct {
-	Message string `xml:"message,attr"`
-}
-
-// JUnitProperty represents a key/value pair used to define properties.
-type JUnitProperty struct {
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
-}
-
-// JUnitFailure contains data related to a failed test.
-type JUnitFailure struct {
-	Message  string `xml:"message,attr"`
-	Type     string `xml:"type,attr"`
-	Contents string `xml:",chardata"`
-}
 
 func addDefaultPropertiesToProject() {
 	defaultPropertiesFile := getDefaultPropertiesFile()
@@ -142,7 +77,7 @@ func getDefaultPropertiesFile() string {
 
 func createReport(suiteResult *gauge_messages.SuiteExecutionResult) {
 	dir := createReportsDirectory()
-	bytes, err := getXmlContent(suiteResult)
+	bytes, err := (&XmlBuilder{currentId: 0}).getXmlContent(suiteResult)
 	if err != nil {
 		fmt.Printf("Report generation failed: %s \n", err)
 		os.Exit(1)
@@ -162,62 +97,6 @@ func writeResultFile(reportDir string, bytes []byte) error {
 		return errors.New(fmt.Sprintf("Failed to copy file: %s %s\n", resultFile, err))
 	}
 	return nil
-}
-
-func getXmlContent(executionSuiteResult *gauge_messages.SuiteExecutionResult) ([]byte, error) {
-	suiteResult := executionSuiteResult.GetSuiteResult()
-	suites := JUnitTestSuites{}
-	count := 0
-	for _, result := range suiteResult.GetSpecResults() {
-		count += 1
-		hostName, err := os.Hostname()
-		if err != nil {
-			hostName = hostname
-		}
-		now := time.Now()
-		formattedNow := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
-			now.Year(), now.Month(), now.Day(),
-			now.Hour(), now.Minute(), now.Second())
-		ts := JUnitTestSuite{
-			Id:           int(count),
-			Tests:        int(result.GetScenarioCount()),
-			Failures:     int(result.GetScenarioFailedCount()),
-			Time:         formatTime(int(result.GetExecutionTime())),
-			Timestamp:    formattedNow,
-			Name:         result.GetProtoSpec().GetSpecHeading(),
-			Errors:       0,
-			Hostname:     hostName,
-			Package:      result.GetProtoSpec().GetFileName(),
-			Properties:   []JUnitProperty{},
-			TestCases:    []JUnitTestCase{},
-			SystemOutput: SystemOut{},
-			SystemError:  SystemErr{},
-		}
-		for _, test := range result.GetProtoSpec().GetItems() {
-			if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
-				testCase := JUnitTestCase{
-					Classname: result.GetProtoSpec().GetSpecHeading(),
-					Name:      test.GetScenario().GetScenarioHeading(),
-					Time:      formatTime(int(test.GetScenario().GetExecutionTime())),
-					Failure:   nil,
-				}
-				if test.GetScenario().GetFailed() {
-					testCase.Failure = &JUnitFailure{
-						Message:  "Failed",
-						Type:     "",
-						Contents: "",
-					}
-				}
-				ts.TestCases = append(ts.TestCases, testCase)
-			}
-		}
-		suites.Suites = append(suites.Suites, ts)
-	}
-	bytes, err := xml.MarshalIndent(suites, "", "\t")
-	if err != nil {
-		return nil, err
-	}
-	return bytes, nil
 }
 
 func createExecutionReport() {
@@ -293,8 +172,4 @@ func shouldOverwriteReports() bool {
 		return true
 	}
 	return false
-}
-
-func formatTime(time int) string {
-	return fmt.Sprintf("%.3f", float64(time)/1000.0)
 }
