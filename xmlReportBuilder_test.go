@@ -88,3 +88,58 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 	c.Assert(suites.Suites[0].TestCases[0].Failure.Message, Equals, "Failed")
 	c.Assert(suites.Suites[0].TestCases[0].Failure.Contents, Equals, "")
 }
+
+func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
+	builder := &XmlBuilder{currentId: 0}
+	msg, content := builder.getFailureFromExecutionResult(nil, nil, nil, "PREFIX ")
+
+	c.Assert(msg, Equals, "")
+	c.Assert(content, Equals, "")
+
+	failure := &gauge_messages.ProtoHookFailure{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage")}
+	msg, content = builder.getFailureFromExecutionResult(failure, nil, nil, "PREFIX ")
+
+	c.Assert(msg, Equals, "PREFIX "+preHookFailureMsg)
+	c.Assert(content, Equals, "StackTrace")
+
+	msg, content = builder.getFailureFromExecutionResult(nil, failure, nil, "PREFIX ")
+
+	c.Assert(msg, Equals, "PREFIX "+postHookFailureMsg)
+	c.Assert(content, Equals, "StackTrace")
+
+	executionFailure := &gauge_messages.ProtoExecutionResult{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage"), Failed: proto.Bool(true)}
+	msg, content = builder.getFailureFromExecutionResult(nil, nil, executionFailure, "PREFIX ")
+
+	c.Assert(msg, Equals, "PREFIX "+executionFailureMsg)
+	c.Assert(content, Equals, "StackTrace")
+}
+
+func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
+	value := gauge_messages.ProtoItem_TableDrivenScenario
+	scenario := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
+	scenario1 := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
+	item := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenarios: []*gauge_messages.ProtoScenario{&scenario, &scenario1}}, ItemType: &value}
+	spec := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: proto.Int(1), Failed: proto.Bool(false)}
+	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
+	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
+
+	builder := &XmlBuilder{currentId: 0}
+	bytes, err := builder.getXmlContent(message)
+	var suites JUnitTestSuites
+	xml.Unmarshal(bytes, &suites)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(len(suites.Suites), Equals, 1)
+	c.Assert(suites.Suites[0].Errors, Equals, 0)
+	c.Assert(suites.Suites[0].Failures, Equals, 0)
+	c.Assert(suites.Suites[0].Package, Equals, "FILENAME")
+	c.Assert(suites.Suites[0].Name, Equals, "HEADING")
+	c.Assert(suites.Suites[0].Tests, Equals, 2)
+	c.Assert(suites.Suites[0].Timestamp, Equals, builder.suites.Suites[0].Timestamp)
+	c.Assert(suites.Suites[0].SystemError.Contents, Equals, "")
+	c.Assert(suites.Suites[0].SystemOutput.Contents, Equals, "")
+	c.Assert(len(suites.Suites[0].TestCases), Equals, 2)
+	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario 0")
+	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario 1")
+}

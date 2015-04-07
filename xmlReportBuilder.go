@@ -22,12 +22,16 @@ import (
 	"fmt"
 	"github.com/getgauge/xml-report/gauge_messages"
 	"os"
+	"strconv"
 	"time"
 )
 
 const (
-	hostname        = "HOSTNAME"
-	timeStampFormat = "%d-%02d-%02dT%02d:%02d:%02d"
+	hostname            = "HOSTNAME"
+	timeStampFormat     = "%d-%02d-%02dT%02d:%02d:%02d"
+	preHookFailureMsg   = "Pre Hook Failure"
+	postHookFailureMsg  = "Post Hook Failure"
+	executionFailureMsg = "Execution Failure"
 )
 
 // JUnitTestSuites is a collection of JUnit test suites.
@@ -117,9 +121,51 @@ func (self *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
 	if err != nil {
 		hostName = hostname
 	}
+	ts := self.getTestSuite(result, hostName)
+	if result.GetProtoSpec().GetPreHookFailure() != nil || result.GetProtoSpec().GetPostHookFailure() != nil {
+		ts.Failures += 1
+	}
+	for _, test := range result.GetProtoSpec().GetItems() {
+		if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
+			self.getScenarioContent(result, test.GetScenario(), &ts)
+		} else if test.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
+			self.getTableDrivenScenarioContent(result, test.GetTableDrivenScenario(), &ts)
+		}
+	}
+	self.suites.Suites = append(self.suites.Suites, ts)
+}
+
+func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, scenario *gauge_messages.ProtoScenario, ts *JUnitTestSuite) {
+	testCase := JUnitTestCase{
+		Classname: result.GetProtoSpec().GetSpecHeading(),
+		Name:      scenario.GetScenarioHeading(),
+		Time:      formatTime(int(scenario.GetExecutionTime())),
+		Failure:   nil,
+	}
+	if scenario.GetFailed() {
+		message, content := self.getFailure(scenario)
+		testCase.Failure = &JUnitFailure{
+			Message:  "Failed",
+			Type:     message,
+			Contents: content,
+		}
+	}
+	ts.TestCases = append(ts.TestCases, testCase)
+}
+
+func (self *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
+	for i, scenario := range tableDriven.GetScenarios() {
+		ts.Tests += 1
+		*scenario.ScenarioHeading += " " + strconv.Itoa(i)
+		self.getScenarioContent(result, scenario, ts)
+	}
+	ts.Tests -= 1
+}
+
+func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hostName string) JUnitTestSuite {
 	now := time.Now()
 	formattedNow := fmt.Sprintf(timeStampFormat, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
-	ts := JUnitTestSuite{
+	return JUnitTestSuite{
 		Id:           int(self.currentId),
 		Tests:        int(result.GetScenarioCount()),
 		Failures:     int(result.GetScenarioFailedCount()),
@@ -134,33 +180,6 @@ func (self *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
 		SystemOutput: SystemOut{},
 		SystemError:  SystemErr{},
 	}
-	if result.GetProtoSpec().GetPreHookFailure() != nil || result.GetProtoSpec().GetPostHookFailure() != nil {
-		ts.Failures += 1
-	}
-	for _, test := range result.GetProtoSpec().GetItems() {
-		if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
-			self.getScenarioContent(result, test, &ts)
-		}
-	}
-	self.suites.Suites = append(self.suites.Suites, ts)
-}
-
-func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, test *gauge_messages.ProtoItem, ts *JUnitTestSuite) {
-	testCase := JUnitTestCase{
-		Classname: result.GetProtoSpec().GetSpecHeading(),
-		Name:      test.GetScenario().GetScenarioHeading(),
-		Time:      formatTime(int(test.GetScenario().GetExecutionTime())),
-		Failure:   nil,
-	}
-	if test.GetScenario().GetFailed() {
-		message, content := self.getFailure(test.GetScenario())
-		testCase.Failure = &JUnitFailure{
-			Message:  "Failed",
-			Type:     message,
-			Contents: content,
-		}
-	}
-	ts.TestCases = append(ts.TestCases, testCase)
 }
 
 func (self *XmlBuilder) getFailure(test *gauge_messages.ProtoScenario) (string, string) {
@@ -192,11 +211,11 @@ func (self *XmlBuilder) getFailureFromStep(items []*gauge_messages.ProtoItem) (s
 
 func (self *XmlBuilder) getFailureFromExecutionResult(preHookFailure *gauge_messages.ProtoHookFailure, postHookFailure *gauge_messages.ProtoHookFailure, stepExecutionResult *gauge_messages.ProtoExecutionResult, prefix string) (string, string) {
 	if preHookFailure != nil {
-		return prefix + "Pre Hook Failure", preHookFailure.GetStackTrace()
+		return prefix + preHookFailureMsg, preHookFailure.GetStackTrace()
 	} else if postHookFailure != nil {
-		return prefix + "Post Hook Failure", postHookFailure.GetStackTrace()
+		return prefix + postHookFailureMsg, postHookFailure.GetStackTrace()
 	} else if stepExecutionResult != nil && stepExecutionResult.GetFailed() {
-		return prefix + "Execution Failure", stepExecutionResult.GetStackTrace()
+		return prefix + executionFailureMsg, stepExecutionResult.GetStackTrace()
 	}
 	return "", ""
 }
