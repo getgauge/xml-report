@@ -184,24 +184,29 @@ func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hos
 
 func (self *XmlBuilder) getFailure(test *gauge_messages.ProtoScenario) (string, string) {
 	msg, content := self.getFailureFromExecutionResult(test.GetPreHookFailure(), test.GetPostHookFailure(), nil, "Scenario ")
-	if msg != "" {
-		return msg, content
-	}
-	msg, content = self.getFailureFromStep(test.GetContexts())
-	if msg != "" {
-		return msg, content
-	}
-	return self.getFailureFromStep(test.GetScenarioItems())
+	return self.perform(msg, content, func(test *gauge_messages.ProtoScenario) (string, string) {
+		msg, content = self.getFailureFromSteps(test.GetContexts())
+		return self.perform(msg, content, func(test *gauge_messages.ProtoScenario) (string, string) {
+			return self.getFailureFromSteps(test.GetScenarioItems())
+		}, test)
+	}, test)
 }
 
-func (self *XmlBuilder) getFailureFromStep(items []*gauge_messages.ProtoItem) (string, string) {
+func (self *XmlBuilder) perform(msg string, content string, predicate func(test *gauge_messages.ProtoScenario) (string, string), test *gauge_messages.ProtoScenario) (string, string) {
+	if msg != "" {
+		return msg, content
+	}
+	return predicate(test)
+}
+
+func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem) (string, string) {
 	for _, item := range items {
 		if item.GetItemType() != gauge_messages.ProtoItem_Step {
 			continue
 		}
 		msg, err := self.getFailureFromExecutionResult(item.GetStep().GetStepExecutionResult().GetPreHookFailure(),
 			item.GetStep().GetStepExecutionResult().GetPostHookFailure(),
-			item.GetStep().GetStepExecutionResult().GetExecutionResult(), "Step")
+			item.GetStep().GetStepExecutionResult().GetExecutionResult(), "Step ")
 		if msg != "" {
 			return msg, err
 		}
