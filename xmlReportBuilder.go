@@ -201,12 +201,14 @@ func (self *XmlBuilder) perform(msg string, content string, predicate func(test 
 
 func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem) (string, string) {
 	for _, item := range items {
-		if item.GetItemType() != gauge_messages.ProtoItem_Step {
-			continue
+		msg, err := "", ""
+		if item.GetItemType() == gauge_messages.ProtoItem_Step {
+			msg, err = self.getFailureFromExecutionResult(item.GetStep().GetStepExecutionResult().GetPreHookFailure(),
+				item.GetStep().GetStepExecutionResult().GetPostHookFailure(),
+				item.GetStep().GetStepExecutionResult().GetExecutionResult(), "Step ")
+		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
+			msg, err = self.getFailureFromExecutionResult(nil, nil, item.GetConcept().GetConceptExecutionResult().GetExecutionResult(), "Concept ")
 		}
-		msg, err := self.getFailureFromExecutionResult(item.GetStep().GetStepExecutionResult().GetPreHookFailure(),
-			item.GetStep().GetStepExecutionResult().GetPostHookFailure(),
-			item.GetStep().GetStepExecutionResult().GetExecutionResult(), "Step ")
 		if msg != "" {
 			return msg, err
 		}
