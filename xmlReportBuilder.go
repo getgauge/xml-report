@@ -145,7 +145,7 @@ func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResul
 	if scenario.GetFailed() {
 		message, content := self.getFailure(scenario)
 		testCase.Failure = &JUnitFailure{
-			Message:  "Failed",
+			Message:  message,
 			Type:     message,
 			Contents: content,
 		}

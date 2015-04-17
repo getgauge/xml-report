@@ -85,7 +85,7 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 1)
 	c.Assert(suites.Suites[0].TestCases[0].Classname, Equals, "HEADING")
 	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario1")
-	c.Assert(suites.Suites[0].TestCases[0].Failure.Message, Equals, "Failed")
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Message, Equals, "")
 	c.Assert(suites.Suites[0].TestCases[0].Failure.Contents, Equals, "")
 }
 
