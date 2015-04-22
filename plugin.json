@@ -1,6 +1,6 @@
 {
     "id" : "xml-report",
-    "version" : "0.0.2",
+    "version" : "0.0.3",
     "name" : "Xml Report",
     "description" : "Xml reporting plugin",
     "command" : {
