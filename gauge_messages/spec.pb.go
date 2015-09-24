@@ -31,10 +31,12 @@ It has these top-level messages:
 package gauge_messages
 
 import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
 import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
 
 // / Enumerates various item types that the proto item can contain. Valid types are: Step, Comment, Concept, Scenario, TableDrivenScenario, Table, Tags
@@ -665,11 +667,13 @@ func (m *ProtoTableRow) GetCells() []string {
 // / A proto object representing Step Execution result
 type ProtoStepExecutionResult struct {
 	// / The actual result of the execution
-	ExecutionResult *ProtoExecutionResult `protobuf:"bytes,1,req,name=executionResult" json:"executionResult,omitempty"`
+	ExecutionResult *ProtoExecutionResult `protobuf:"bytes,1,opt,name=executionResult" json:"executionResult,omitempty"`
 	// / Contains a 'before' hook failure message. This happens when the `before_step` hook has an error.
 	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
 	// / Contains a 'after' hook failure message. This happens when the `after_step` hook has an error.
 	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	Skipped          *bool             `protobuf:"varint,4,req,name=skipped" json:"skipped,omitempty"`
+	SkippedReason    *string           `protobuf:"bytes,5,opt,name=skippedReason" json:"skippedReason,omitempty"`
 	XXX_unrecognized []byte            `json:"-"`
 }
 
@@ -698,6 +702,20 @@ func (m *ProtoStepExecutionResult) GetPostHookFailure() *ProtoHookFailure {
 	return nil
 }
 
+func (m *ProtoStepExecutionResult) GetSkipped() bool {
+	if m != nil && m.Skipped != nil {
+		return *m.Skipped
+	}
+	return false
+}
+
+func (m *ProtoStepExecutionResult) GetSkippedReason() string {
+	if m != nil && m.SkippedReason != nil {
+		return *m.SkippedReason
+	}
+	return ""
+}
+
 // / A proto object representing the result of an execution
 type ProtoExecutionResult struct {
 	// / Flag to indicate failure
@@ -711,8 +729,10 @@ type ProtoExecutionResult struct {
 	// / Byte array containing screenshot taken at the time of failure.
 	ScreenShot []byte `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
 	// / Holds the time taken for executing this scenario.
-	ExecutionTime    *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	ExecutionTime *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
+	// / Additional information at exec time to be available on reports
+	Message          []string `protobuf:"bytes,7,rep,name=message" json:"message,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *ProtoExecutionResult) Reset()         { *m = ProtoExecutionResult{} }
@@ -759,6 +779,13 @@ func (m *ProtoExecutionResult) GetExecutionTime() int64 {
 		return *m.ExecutionTime
 	}
 	return 0
+}
+
+func (m *ProtoExecutionResult) GetMessage() []string {
+	if m != nil {
+		return m.Message
+	}
+	return nil
 }
 
 // / A proto object representing a pre-hook failure.
@@ -813,8 +840,17 @@ type ProtoSuiteResult struct {
 	// / Holds the time taken for executing the whole suite.
 	ExecutionTime *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
 	// / Holds a metric indicating the success rate of the execution.
-	SuccessRate      *float32 `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	SuccessRate *float32 `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
+	// / The environment against which execution was done
+	Environment *string `protobuf:"bytes,8,opt,name=environment" json:"environment,omitempty"`
+	// / Tag expression used for filtering specification
+	Tags *string `protobuf:"bytes,9,opt,name=tags" json:"tags,omitempty"`
+	// / Project name
+	ProjectName *string `protobuf:"bytes,10,req,name=projectName" json:"projectName,omitempty"`
+	// / Timestamp of when execution started
+	Timestamp         *string `protobuf:"bytes,11,req,name=timestamp" json:"timestamp,omitempty"`
+	SpecsSkippedCount *int32  `protobuf:"varint,12,req,name=specsSkippedCount" json:"specsSkippedCount,omitempty"`
+	XXX_unrecognized  []byte  `json:"-"`
 }
 
 func (m *ProtoSuiteResult) Reset()         { *m = ProtoSuiteResult{} }
@@ -870,6 +906,41 @@ func (m *ProtoSuiteResult) GetSuccessRate() float32 {
 	return 0
 }
 
+func (m *ProtoSuiteResult) GetEnvironment() string {
+	if m != nil && m.Environment != nil {
+		return *m.Environment
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetTags() string {
+	if m != nil && m.Tags != nil {
+		return *m.Tags
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetProjectName() string {
+	if m != nil && m.ProjectName != nil {
+		return *m.ProjectName
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetTimestamp() string {
+	if m != nil && m.Timestamp != nil {
+		return *m.Timestamp
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetSpecsSkippedCount() int32 {
+	if m != nil && m.SpecsSkippedCount != nil {
+		return *m.SpecsSkippedCount
+	}
+	return 0
+}
+
 // / A proto object representing the result of Spec execution.
 type ProtoSpecResult struct {
 	// / Represents the corresponding Specification
@@ -883,8 +954,10 @@ type ProtoSpecResult struct {
 	// / Holds the row numbers, which caused the execution to fail.
 	FailedDataTableRows []int32 `protobuf:"varint,5,rep,name=failedDataTableRows" json:"failedDataTableRows,omitempty"`
 	// / Holds the time taken for executing the spec.
-	ExecutionTime    *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	ExecutionTime        *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
+	Skipped              *bool  `protobuf:"varint,7,req,name=skipped" json:"skipped,omitempty"`
+	ScenarioSkippedCount *int32 `protobuf:"varint,9,req,name=scenarioSkippedCount" json:"scenarioSkippedCount,omitempty"`
+	XXX_unrecognized     []byte `json:"-"`
 }
 
 func (m *ProtoSpecResult) Reset()         { *m = ProtoSpecResult{} }
@@ -929,6 +1002,20 @@ func (m *ProtoSpecResult) GetFailedDataTableRows() []int32 {
 func (m *ProtoSpecResult) GetExecutionTime() int64 {
 	if m != nil && m.ExecutionTime != nil {
 		return *m.ExecutionTime
+	}
+	return 0
+}
+
+func (m *ProtoSpecResult) GetSkipped() bool {
+	if m != nil && m.Skipped != nil {
+		return *m.Skipped
+	}
+	return false
+}
+
+func (m *ProtoSpecResult) GetScenarioSkippedCount() int32 {
+	if m != nil && m.ScenarioSkippedCount != nil {
+		return *m.ScenarioSkippedCount
 	}
 	return 0
 }

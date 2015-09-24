@@ -172,7 +172,7 @@ func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hos
 		Time:         formatTime(int(result.GetExecutionTime())),
 		Timestamp:    formattedNow,
 		Name:         result.GetProtoSpec().GetSpecHeading(),
-		Errors:       0,
+		Errors:       int(result.GetScenarioSkippedCount()),
 		Hostname:     hostName,
 		Package:      result.GetProtoSpec().GetFileName(),
 		Properties:   []JUnitProperty{},
