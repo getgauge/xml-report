@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/xml-report/gauge_messages"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -43,20 +44,21 @@ type JUnitTestSuites struct {
 // JUnitTestSuite is a single JUnit test suite which may contain many
 // testcases.
 type JUnitTestSuite struct {
-	XMLName      xml.Name        `xml:"testsuite"`
-	Id           int             `xml:"id,attr"`
-	Tests        int             `xml:"tests,attr"`
-	Failures     int             `xml:"failures,attr"`
-	Package      string          `xml:"package,attr"`
-	Time         string          `xml:"time,attr"`
-	Timestamp    string          `xml:"timestamp,attr"`
-	Name         string          `xml:"name,attr"`
-	Errors       int             `xml:"errors,attr"`
-	Hostname     string          `xml:"hostname,attr"`
-	Properties   []JUnitProperty `xml:"properties>property,omitempty"`
-	TestCases    []JUnitTestCase `xml:"testcase"`
-	SystemOutput SystemOut
-	SystemError  SystemErr
+	XMLName          xml.Name        `xml:"testsuite"`
+	Id               int             `xml:"id,attr"`
+	Tests            int             `xml:"tests,attr"`
+	Failures         int             `xml:"failures,attr"`
+	Package          string          `xml:"package,attr"`
+	Time             string          `xml:"time,attr"`
+	Timestamp        string          `xml:"timestamp,attr"`
+	Name             string          `xml:"name,attr"`
+	Errors           int             `xml:"errors,attr"`
+	SkippedTestCount int             `xml:"skipped,attr,omitempty"`
+	Hostname         string          `xml:"hostname,attr"`
+	Properties       []JUnitProperty `xml:"properties>property,omitempty"`
+	TestCases        []JUnitTestCase `xml:"testcase"`
+	SystemOutput     SystemOut
+	SystemError      SystemErr
 }
 
 // JUnitTestCase is a single test case with its result.
@@ -149,6 +151,10 @@ func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResul
 			Type:     message,
 			Contents: content,
 		}
+	} else if scenario.GetSkipped() {
+		testCase.SkipMessage = &JUnitSkipMessage{
+			Message: strings.Join(scenario.SkipErrors, "\n"),
+		}
 	}
 	ts.TestCases = append(ts.TestCases, testCase)
 }
@@ -165,20 +171,25 @@ func (self *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.Pro
 func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hostName string) JUnitTestSuite {
 	now := time.Now()
 	formattedNow := fmt.Sprintf(timeStampFormat, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
+	systemError := SystemErr{}
+	if result.GetScenarioSkippedCount() > 0 {
+		systemError.Contents = fmt.Sprintf("Validation failed, %d Scenarios were skipped.", result.GetScenarioSkippedCount())
+	}
 	return JUnitTestSuite{
-		Id:           int(self.currentId),
-		Tests:        int(result.GetScenarioCount()),
-		Failures:     int(result.GetScenarioFailedCount()),
-		Time:         formatTime(int(result.GetExecutionTime())),
-		Timestamp:    formattedNow,
-		Name:         result.GetProtoSpec().GetSpecHeading(),
-		Errors:       int(result.GetScenarioSkippedCount()),
-		Hostname:     hostName,
-		Package:      result.GetProtoSpec().GetFileName(),
-		Properties:   []JUnitProperty{},
-		TestCases:    []JUnitTestCase{},
-		SystemOutput: SystemOut{},
-		SystemError:  SystemErr{},
+		Id:               int(self.currentId),
+		Tests:            int(result.GetScenarioCount()),
+		Failures:         int(result.GetScenarioFailedCount()),
+		Time:             formatTime(int(result.GetExecutionTime())),
+		Timestamp:        formattedNow,
+		Name:             result.GetProtoSpec().GetSpecHeading(),
+		Errors:           0,
+		Hostname:         hostName,
+		Package:          result.GetProtoSpec().GetFileName(),
+		Properties:       []JUnitProperty{},
+		TestCases:        []JUnitTestCase{},
+		SkippedTestCount: int(result.GetScenarioSkippedCount()),
+		SystemOutput:     SystemOut{},
+		SystemError:      systemError,
 	}
 }
 
