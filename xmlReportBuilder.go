@@ -229,11 +229,11 @@ func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem) (
 
 func (self *XmlBuilder) getFailureFromExecutionResult(preHookFailure *gauge_messages.ProtoHookFailure, postHookFailure *gauge_messages.ProtoHookFailure, stepExecutionResult *gauge_messages.ProtoExecutionResult, prefix string) (string, string) {
 	if preHookFailure != nil {
-		return prefix + preHookFailureMsg, preHookFailure.GetStackTrace()
+		return fmt.Sprintf("%s%s: '%s'", prefix, preHookFailureMsg, preHookFailure.GetErrorMessage()), preHookFailure.GetStackTrace()
 	} else if postHookFailure != nil {
-		return prefix + postHookFailureMsg, postHookFailure.GetStackTrace()
+		return fmt.Sprintf("%s%s: '%s'", prefix, postHookFailureMsg, postHookFailure.GetErrorMessage()), postHookFailure.GetStackTrace()
 	} else if stepExecutionResult != nil && stepExecutionResult.GetFailed() {
-		return prefix + executionFailureMsg, stepExecutionResult.GetStackTrace()
+		return fmt.Sprintf("%s%s: '%s'", prefix, executionFailureMsg, stepExecutionResult.GetErrorMessage()), stepExecutionResult.GetStackTrace()
 	}
 	return "", ""
 }

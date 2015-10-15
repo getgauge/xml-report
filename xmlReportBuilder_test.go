@@ -99,18 +99,18 @@ func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
 	failure := &gauge_messages.ProtoHookFailure{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage")}
 	msg, content = builder.getFailureFromExecutionResult(failure, nil, nil, "PREFIX ")
 
-	c.Assert(msg, Equals, "PREFIX "+preHookFailureMsg)
+	c.Assert(msg, Equals, "PREFIX "+preHookFailureMsg+": 'ErrorMessage'")
 	c.Assert(content, Equals, "StackTrace")
 
 	msg, content = builder.getFailureFromExecutionResult(nil, failure, nil, "PREFIX ")
 
-	c.Assert(msg, Equals, "PREFIX "+postHookFailureMsg)
+	c.Assert(msg, Equals, "PREFIX "+postHookFailureMsg+": 'ErrorMessage'")
 	c.Assert(content, Equals, "StackTrace")
 
 	executionFailure := &gauge_messages.ProtoExecutionResult{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage"), Failed: proto.Bool(true)}
 	msg, content = builder.getFailureFromExecutionResult(nil, nil, executionFailure, "PREFIX ")
 
-	c.Assert(msg, Equals, "PREFIX "+executionFailureMsg)
+	c.Assert(msg, Equals, "PREFIX "+executionFailureMsg+": 'ErrorMessage'")
 	c.Assert(content, Equals, "StackTrace")
 }
 
