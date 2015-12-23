@@ -40,7 +40,7 @@ const (
 	xmlReport                   = "xml-report"
 	overwriteReportsEnvProperty = "overwrite_reports"
 	resultFile                  = "result.xml"
-	timeFormat                  = "2013-05-24T10:23:58"
+	timeFormat                  = "2006-01-02 15.04.05"
 )
 
 var projectRoot string
