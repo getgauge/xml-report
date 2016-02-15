@@ -3,6 +3,11 @@
     "version" : "0.1.2",
     "name" : "Xml Report",
     "description" : "Xml reporting plugin",
+    "install": {
+        "windows": [],
+        "linux": [],
+        "darwin": []
+    },
     "command" : {
         "windows" : ["bin/xml-report"],
         "linux" : ["bin/xml-report"],
