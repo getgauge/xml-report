@@ -31,6 +31,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/getgauge/common"
 )
 
 const (
@@ -54,7 +56,6 @@ const (
 	deploy            = "deploy"
 	pluginJsonFile    = "plugin.json"
 	GAUGE_MESSAGES    = "gauge_messages"
-	nightlyDatelayout = "2006-01-02"
 )
 
 var deployDir = filepath.Join(deploy, xmlReport)
@@ -63,7 +64,7 @@ var buildMetadata string
 func main() {
 	flag.Parse()
 	if *nightly {
-		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
+		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(common.NightlyDatelayout))
 	}
 
 	if *install {
