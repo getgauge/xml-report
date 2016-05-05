@@ -20,11 +20,12 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/getgauge/xml-report/gauge_messages"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/getgauge/xml-report/gauge_messages"
 )
 
 const (
@@ -194,7 +195,7 @@ func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hos
 }
 
 func (self *XmlBuilder) getFailure(test *gauge_messages.ProtoScenario) (string, string) {
-	msg, content := self.getFailureFromExecutionResult(test.GetPreHookFailure(), test.GetPostHookFailure(), nil, "Scenario ")
+	msg, content := self.getFailureFromExecutionResult(test.GetScenarioHeading(), test.GetPreHookFailure(), test.GetPostHookFailure(), nil, "Scenario ")
 	return self.perform(msg, content, func(test *gauge_messages.ProtoScenario) (string, string) {
 		msg, content = self.getFailureFromSteps(test.GetContexts())
 		return self.perform(msg, content, func(test *gauge_messages.ProtoScenario) (string, string) {
@@ -214,11 +215,11 @@ func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem) (
 	for _, item := range items {
 		msg, err := "", ""
 		if item.GetItemType() == gauge_messages.ProtoItem_Step {
-			msg, err = self.getFailureFromExecutionResult(item.GetStep().GetStepExecutionResult().GetPreHookFailure(),
+			msg, err = self.getFailureFromExecutionResult(item.GetStep().GetActualText(), item.GetStep().GetStepExecutionResult().GetPreHookFailure(),
 				item.GetStep().GetStepExecutionResult().GetPostHookFailure(),
 				item.GetStep().GetStepExecutionResult().GetExecutionResult(), "Step ")
 		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
-			msg, err = self.getFailureFromExecutionResult(nil, nil, item.GetConcept().GetConceptExecutionResult().GetExecutionResult(), "Concept ")
+			msg, err = self.getFailureFromExecutionResult("", nil, nil, item.GetConcept().GetConceptExecutionResult().GetExecutionResult(), "Concept ")
 		}
 		if msg != "" {
 			return msg, err
@@ -227,13 +228,16 @@ func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem) (
 	return "", ""
 }
 
-func (self *XmlBuilder) getFailureFromExecutionResult(preHookFailure *gauge_messages.ProtoHookFailure, postHookFailure *gauge_messages.ProtoHookFailure, stepExecutionResult *gauge_messages.ProtoExecutionResult, prefix string) (string, string) {
+func (self *XmlBuilder) getFailureFromExecutionResult(name string, preHookFailure *gauge_messages.ProtoHookFailure, postHookFailure *gauge_messages.ProtoHookFailure, stepExecutionResult *gauge_messages.ProtoExecutionResult, prefix string) (string, string) {
+	if len(name) > 0 {
+		name = fmt.Sprintf("%s\n", name)
+	}
 	if preHookFailure != nil {
-		return fmt.Sprintf("%s%s: '%s'", prefix, preHookFailureMsg, preHookFailure.GetErrorMessage()), preHookFailure.GetStackTrace()
+		return fmt.Sprintf("%s%s%s: '%s'", name, prefix, preHookFailureMsg, preHookFailure.GetErrorMessage()), preHookFailure.GetStackTrace()
 	} else if postHookFailure != nil {
-		return fmt.Sprintf("%s%s: '%s'", prefix, postHookFailureMsg, postHookFailure.GetErrorMessage()), postHookFailure.GetStackTrace()
+		return fmt.Sprintf("%s%s%s: '%s'", name, prefix, postHookFailureMsg, postHookFailure.GetErrorMessage()), postHookFailure.GetStackTrace()
 	} else if stepExecutionResult != nil && stepExecutionResult.GetFailed() {
-		return fmt.Sprintf("%s%s: '%s'", prefix, executionFailureMsg, stepExecutionResult.GetErrorMessage()), stepExecutionResult.GetStackTrace()
+		return fmt.Sprintf("%s%s%s: '%s'", name, prefix, executionFailureMsg, stepExecutionResult.GetErrorMessage()), stepExecutionResult.GetStackTrace()
 	}
 	return "", ""
 }
