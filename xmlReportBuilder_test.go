@@ -19,10 +19,11 @@ package main
 
 import (
 	"encoding/xml"
+	"testing"
+
 	"github.com/getgauge/xml-report/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -91,26 +92,31 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 
 func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
 	builder := &XmlBuilder{currentId: 0}
-	msg, content := builder.getFailureFromExecutionResult(nil, nil, nil, "PREFIX ")
+	msg, content := builder.getFailureFromExecutionResult("", nil, nil, nil, "PREFIX ")
 
 	c.Assert(msg, Equals, "")
 	c.Assert(content, Equals, "")
 
 	failure := &gauge_messages.ProtoHookFailure{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage")}
-	msg, content = builder.getFailureFromExecutionResult(failure, nil, nil, "PREFIX ")
+	msg, content = builder.getFailureFromExecutionResult("", failure, nil, nil, "PREFIX ")
 
 	c.Assert(msg, Equals, "PREFIX "+preHookFailureMsg+": 'ErrorMessage'")
 	c.Assert(content, Equals, "StackTrace")
 
-	msg, content = builder.getFailureFromExecutionResult(nil, failure, nil, "PREFIX ")
+	msg, content = builder.getFailureFromExecutionResult("", nil, failure, nil, "PREFIX ")
 
 	c.Assert(msg, Equals, "PREFIX "+postHookFailureMsg+": 'ErrorMessage'")
 	c.Assert(content, Equals, "StackTrace")
 
-	executionFailure := &gauge_messages.ProtoExecutionResult{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage"), Failed: proto.Bool(true)}
-	msg, content = builder.getFailureFromExecutionResult(nil, nil, executionFailure, "PREFIX ")
+	msg, content = builder.getFailureFromExecutionResult("Foo", nil, failure, nil, "PREFIX ")
 
-	c.Assert(msg, Equals, "PREFIX "+executionFailureMsg+": 'ErrorMessage'")
+	c.Assert(msg, Equals, "Foo\nPREFIX "+postHookFailureMsg+": 'ErrorMessage'")
+	c.Assert(content, Equals, "StackTrace")
+
+	executionFailure := &gauge_messages.ProtoExecutionResult{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage"), Failed: proto.Bool(true)}
+	msg, content = builder.getFailureFromExecutionResult("Foo", nil, nil, executionFailure, "PREFIX ")
+
+	c.Assert(msg, Equals, "Foo\nPREFIX "+executionFailureMsg+": 'ErrorMessage'")
 	c.Assert(content, Equals, "StackTrace")
 }
 
