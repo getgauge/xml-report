@@ -207,27 +207,28 @@ func (self *XmlBuilder) getFailure(test *gauge_messages.ProtoScenario) []StepFai
 	if hookInfo.Message != "" {
 		return append(errInfo, hookInfo)
 	}
-	contextsInfo := self.getFailureFromSteps(test.GetContexts())
+	contextsInfo := self.getFailureFromSteps(test.GetContexts(), "Step ")
 	if len(contextsInfo) > 0 {
 		errInfo = append(errInfo, contextsInfo...)
 	}
-	stepsInfo := self.getFailureFromSteps(test.GetScenarioItems())
+	stepsInfo := self.getFailureFromSteps(test.GetScenarioItems(), "Step ")
 	if len(stepsInfo) > 0 {
 		errInfo = append(errInfo, stepsInfo...)
 	}
 	return errInfo
 }
 
-func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem) []StepFailure {
+func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem, prefix string) []StepFailure {
 	errInfo := []StepFailure{}
 	for _, item := range items {
 		stepInfo := StepFailure{Message: "", Err: ""}
 		if item.GetItemType() == gauge_messages.ProtoItem_Step {
-			stepInfo = self.getFailureFromExecutionResult(item.GetStep().GetActualText(), item.GetStep().GetStepExecutionResult().GetPreHookFailure(),
-				item.GetStep().GetStepExecutionResult().GetPostHookFailure(),
-				item.GetStep().GetStepExecutionResult().GetExecutionResult(), "Step ")
+			preHookFailure := item.GetStep().GetStepExecutionResult().GetPreHookFailure()
+			postHookFailure := item.GetStep().GetStepExecutionResult().GetPostHookFailure()
+			result := item.GetStep().GetStepExecutionResult().GetExecutionResult()
+			stepInfo = self.getFailureFromExecutionResult(item.GetStep().GetActualText(), preHookFailure, postHookFailure, result, prefix)
 		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
-			stepInfo = self.getFailureFromExecutionResult("", nil, nil, item.GetConcept().GetConceptExecutionResult().GetExecutionResult(), "Concept ")
+			errInfo = append(errInfo, self.getFailureFromSteps(item.GetConcept().GetSteps(), "Concept ")...)
 		}
 		if stepInfo.Message != "" {
 			errInfo = append(errInfo, stepInfo)
