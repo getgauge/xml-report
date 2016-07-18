@@ -2,27 +2,30 @@
 
 # This file is part of getgauge/xml-report.
 
-# getgauge/xml-report is free software: you can redistribute it and/or modify
+# Gauge is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-# getgauge/xml-report is distributed in the hope that it will be useful,
+# Gauge is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
 # You should have received a copy of the GNU General Public License
-# along with getgauge/xml-report.  If not, see <http://www.gnu.org/licenses/>.
+# along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
 #!/bin/sh
 
-#Using protoc version 2.5.0
+#Using protoc version 3.0.0
 
 cd gauge-proto
-PATH=$PATH:$GOPATH/bin protoc --go_out=../gauge_messages spec.proto
-PATH=$PATH:$GOPATH/bin protoc --go_out=../gauge_messages messages.proto
+PATH=$PATH:$GOPATH/bin protoc --go_out=plugins=grpc:../gauge_messages *.proto
 
 cd ..
 sed  -i.backup '/import gauge_messages1 "spec.pb"/d' gauge_messages/messages.pb.go && sed  -i.backup 's/gauge_messages1.//g' gauge_messages/messages.pb.go && rm gauge_messages/messages.pb.go.backup
-go fmt github.com/getgauge/xml-report/...
+sed  -i.backup '/import gauge_messages1 "spec.pb"/d' gauge_messages/api.pb.go && sed  -i.backup 's/gauge_messages1.//g' gauge_messages/api.pb.go && rm gauge_messages/api.pb.go.backup
+
+sed -i.backup '/import "."/d' gauge_messages/api.pb.go && rm gauge_messages/api.pb.go.backup
+sed -i.backup '/import "."/d' gauge_messages/messages.pb.go && rm gauge_messages/messages.pb.go.backup
+go fmt github.com/getgauge/gauge/...

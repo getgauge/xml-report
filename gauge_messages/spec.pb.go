@@ -2,32 +2,6 @@
 // source: spec.proto
 // DO NOT EDIT!
 
-/*
-Package gauge_messages is a generated protocol buffer package.
-
-It is generated from these files:
-	spec.proto
-
-It has these top-level messages:
-	ProtoSpec
-	ProtoItem
-	ProtoScenario
-	ProtoTableDrivenScenario
-	ProtoStep
-	ProtoConcept
-	ProtoTags
-	Fragment
-	Parameter
-	ProtoComment
-	ProtoTable
-	ProtoTableRow
-	ProtoStepExecutionResult
-	ProtoExecutionResult
-	ProtoHookFailure
-	ProtoSuiteResult
-	ProtoSpecResult
-	ProtoStepValue
-*/
 package gauge_messages
 
 import proto "github.com/golang/protobuf/proto"
@@ -87,6 +61,7 @@ func (x *ProtoItem_ItemType) UnmarshalJSON(data []byte) error {
 	*x = ProtoItem_ItemType(value)
 	return nil
 }
+func (ProtoItem_ItemType) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{1, 0} }
 
 // / Enum representing the types of Fragment
 type Fragment_FragmentType int32
@@ -121,6 +96,7 @@ func (x *Fragment_FragmentType) UnmarshalJSON(data []byte) error {
 	*x = Fragment_FragmentType(value)
 	return nil
 }
+func (Fragment_FragmentType) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{8, 0} }
 
 // / Enum representing types of Parameter.
 type Parameter_ParameterType int32
@@ -164,6 +140,43 @@ func (x *Parameter_ParameterType) UnmarshalJSON(data []byte) error {
 	*x = Parameter_ParameterType(value)
 	return nil
 }
+func (Parameter_ParameterType) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{9, 0} }
+
+type ProtoExecutionResult_ErrorType int32
+
+const (
+	ProtoExecutionResult_ASSERTION    ProtoExecutionResult_ErrorType = 1
+	ProtoExecutionResult_VERIFICATION ProtoExecutionResult_ErrorType = 2
+)
+
+var ProtoExecutionResult_ErrorType_name = map[int32]string{
+	1: "ASSERTION",
+	2: "VERIFICATION",
+}
+var ProtoExecutionResult_ErrorType_value = map[string]int32{
+	"ASSERTION":    1,
+	"VERIFICATION": 2,
+}
+
+func (x ProtoExecutionResult_ErrorType) Enum() *ProtoExecutionResult_ErrorType {
+	p := new(ProtoExecutionResult_ErrorType)
+	*p = x
+	return p
+}
+func (x ProtoExecutionResult_ErrorType) String() string {
+	return proto.EnumName(ProtoExecutionResult_ErrorType_name, int32(x))
+}
+func (x *ProtoExecutionResult_ErrorType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ProtoExecutionResult_ErrorType_value, data, "ProtoExecutionResult_ErrorType")
+	if err != nil {
+		return err
+	}
+	*x = ProtoExecutionResult_ErrorType(value)
+	return nil
+}
+func (ProtoExecutionResult_ErrorType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor3, []int{14, 0}
+}
 
 // / A proto object representing a Specification
 // / A specification can contain Scenarios or Steps, besides Comments
@@ -185,9 +198,10 @@ type ProtoSpec struct {
 	XXX_unrecognized []byte   `json:"-"`
 }
 
-func (m *ProtoSpec) Reset()         { *m = ProtoSpec{} }
-func (m *ProtoSpec) String() string { return proto.CompactTextString(m) }
-func (*ProtoSpec) ProtoMessage()    {}
+func (m *ProtoSpec) Reset()                    { *m = ProtoSpec{} }
+func (m *ProtoSpec) String() string            { return proto.CompactTextString(m) }
+func (*ProtoSpec) ProtoMessage()               {}
+func (*ProtoSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 func (m *ProtoSpec) GetSpecHeading() string {
 	if m != nil && m.SpecHeading != nil {
@@ -259,9 +273,10 @@ type ProtoItem struct {
 	XXX_unrecognized []byte     `json:"-"`
 }
 
-func (m *ProtoItem) Reset()         { *m = ProtoItem{} }
-func (m *ProtoItem) String() string { return proto.CompactTextString(m) }
-func (*ProtoItem) ProtoMessage()    {}
+func (m *ProtoItem) Reset()                    { *m = ProtoItem{} }
+func (m *ProtoItem) String() string            { return proto.CompactTextString(m) }
+func (*ProtoItem) ProtoMessage()               {}
+func (*ProtoItem) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
 
 func (m *ProtoItem) GetItemType() ProtoItem_ItemType {
 	if m != nil && m.ItemType != nil {
@@ -336,15 +351,22 @@ type ProtoScenario struct {
 	// / Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
 	Tags []string `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
 	// / Holds the time taken for executing this scenario.
-	ExecutionTime    *int64   `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
-	Skipped          *bool    `protobuf:"varint,9,req,name=skipped" json:"skipped,omitempty"`
-	SkipErrors       []string `protobuf:"bytes,10,rep,name=skipErrors" json:"skipErrors,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	ExecutionTime *int64   `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
+	Skipped       *bool    `protobuf:"varint,9,req,name=skipped" json:"skipped,omitempty"`
+	SkipErrors    []string `protobuf:"bytes,10,rep,name=skipErrors" json:"skipErrors,omitempty"`
+	// / Holds the unique Identifier of a scenario.
+	ID *string `protobuf:"bytes,11,opt,name=ID,json=iD" json:"ID,omitempty"`
+	// / Collection of Teardown steps. The Teardown steps are executed after every run.
+	TearDownSteps []*ProtoItem `protobuf:"bytes,12,rep,name=tearDownSteps" json:"tearDownSteps,omitempty"`
+	// / Span(start, end) of scenario
+	Span             *Span  `protobuf:"bytes,13,opt,name=span" json:"span,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
-func (m *ProtoScenario) Reset()         { *m = ProtoScenario{} }
-func (m *ProtoScenario) String() string { return proto.CompactTextString(m) }
-func (*ProtoScenario) ProtoMessage()    {}
+func (m *ProtoScenario) Reset()                    { *m = ProtoScenario{} }
+func (m *ProtoScenario) String() string            { return proto.CompactTextString(m) }
+func (*ProtoScenario) ProtoMessage()               {}
+func (*ProtoScenario) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{2} }
 
 func (m *ProtoScenario) GetScenarioHeading() string {
 	if m != nil && m.ScenarioHeading != nil {
@@ -416,6 +438,53 @@ func (m *ProtoScenario) GetSkipErrors() []string {
 	return nil
 }
 
+func (m *ProtoScenario) GetID() string {
+	if m != nil && m.ID != nil {
+		return *m.ID
+	}
+	return ""
+}
+
+func (m *ProtoScenario) GetTearDownSteps() []*ProtoItem {
+	if m != nil {
+		return m.TearDownSteps
+	}
+	return nil
+}
+
+func (m *ProtoScenario) GetSpan() *Span {
+	if m != nil {
+		return m.Span
+	}
+	return nil
+}
+
+// / A proto object representing a Span of content
+type Span struct {
+	Start            *int64 `protobuf:"varint,1,req,name=start" json:"start,omitempty"`
+	End              *int64 `protobuf:"varint,2,req,name=end" json:"end,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *Span) Reset()                    { *m = Span{} }
+func (m *Span) String() string            { return proto.CompactTextString(m) }
+func (*Span) ProtoMessage()               {}
+func (*Span) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{3} }
+
+func (m *Span) GetStart() int64 {
+	if m != nil && m.Start != nil {
+		return *m.Start
+	}
+	return 0
+}
+
+func (m *Span) GetEnd() int64 {
+	if m != nil && m.End != nil {
+		return *m.End
+	}
+	return 0
+}
+
 // / A proto object representing a TableDrivenScenario
 type ProtoTableDrivenScenario struct {
 	// / Holds the Underlying scenario that is executed for every row in the table.
@@ -423,9 +492,10 @@ type ProtoTableDrivenScenario struct {
 	XXX_unrecognized []byte           `json:"-"`
 }
 
-func (m *ProtoTableDrivenScenario) Reset()         { *m = ProtoTableDrivenScenario{} }
-func (m *ProtoTableDrivenScenario) String() string { return proto.CompactTextString(m) }
-func (*ProtoTableDrivenScenario) ProtoMessage()    {}
+func (m *ProtoTableDrivenScenario) Reset()                    { *m = ProtoTableDrivenScenario{} }
+func (m *ProtoTableDrivenScenario) String() string            { return proto.CompactTextString(m) }
+func (*ProtoTableDrivenScenario) ProtoMessage()               {}
+func (*ProtoTableDrivenScenario) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{4} }
 
 func (m *ProtoTableDrivenScenario) GetScenarios() []*ProtoScenario {
 	if m != nil {
@@ -447,9 +517,10 @@ type ProtoStep struct {
 	XXX_unrecognized    []byte                    `json:"-"`
 }
 
-func (m *ProtoStep) Reset()         { *m = ProtoStep{} }
-func (m *ProtoStep) String() string { return proto.CompactTextString(m) }
-func (*ProtoStep) ProtoMessage()    {}
+func (m *ProtoStep) Reset()                    { *m = ProtoStep{} }
+func (m *ProtoStep) String() string            { return proto.CompactTextString(m) }
+func (*ProtoStep) ProtoMessage()               {}
+func (*ProtoStep) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{5} }
 
 func (m *ProtoStep) GetActualText() string {
 	if m != nil && m.ActualText != nil {
@@ -492,9 +563,10 @@ type ProtoConcept struct {
 	XXX_unrecognized       []byte                    `json:"-"`
 }
 
-func (m *ProtoConcept) Reset()         { *m = ProtoConcept{} }
-func (m *ProtoConcept) String() string { return proto.CompactTextString(m) }
-func (*ProtoConcept) ProtoMessage()    {}
+func (m *ProtoConcept) Reset()                    { *m = ProtoConcept{} }
+func (m *ProtoConcept) String() string            { return proto.CompactTextString(m) }
+func (*ProtoConcept) ProtoMessage()               {}
+func (*ProtoConcept) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{6} }
 
 func (m *ProtoConcept) GetConceptStep() *ProtoStep {
 	if m != nil {
@@ -524,9 +596,10 @@ type ProtoTags struct {
 	XXX_unrecognized []byte   `json:"-"`
 }
 
-func (m *ProtoTags) Reset()         { *m = ProtoTags{} }
-func (m *ProtoTags) String() string { return proto.CompactTextString(m) }
-func (*ProtoTags) ProtoMessage()    {}
+func (m *ProtoTags) Reset()                    { *m = ProtoTags{} }
+func (m *ProtoTags) String() string            { return proto.CompactTextString(m) }
+func (*ProtoTags) ProtoMessage()               {}
+func (*ProtoTags) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{7} }
 
 func (m *ProtoTags) GetTags() []string {
 	if m != nil {
@@ -547,9 +620,10 @@ type Fragment struct {
 	XXX_unrecognized []byte     `json:"-"`
 }
 
-func (m *Fragment) Reset()         { *m = Fragment{} }
-func (m *Fragment) String() string { return proto.CompactTextString(m) }
-func (*Fragment) ProtoMessage()    {}
+func (m *Fragment) Reset()                    { *m = Fragment{} }
+func (m *Fragment) String() string            { return proto.CompactTextString(m) }
+func (*Fragment) ProtoMessage()               {}
+func (*Fragment) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{8} }
 
 func (m *Fragment) GetFragmentType() Fragment_FragmentType {
 	if m != nil && m.FragmentType != nil {
@@ -585,9 +659,10 @@ type Parameter struct {
 	XXX_unrecognized []byte      `json:"-"`
 }
 
-func (m *Parameter) Reset()         { *m = Parameter{} }
-func (m *Parameter) String() string { return proto.CompactTextString(m) }
-func (*Parameter) ProtoMessage()    {}
+func (m *Parameter) Reset()                    { *m = Parameter{} }
+func (m *Parameter) String() string            { return proto.CompactTextString(m) }
+func (*Parameter) ProtoMessage()               {}
+func (*Parameter) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{9} }
 
 func (m *Parameter) GetParameterType() Parameter_ParameterType {
 	if m != nil && m.ParameterType != nil {
@@ -624,9 +699,10 @@ type ProtoComment struct {
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *ProtoComment) Reset()         { *m = ProtoComment{} }
-func (m *ProtoComment) String() string { return proto.CompactTextString(m) }
-func (*ProtoComment) ProtoMessage()    {}
+func (m *ProtoComment) Reset()                    { *m = ProtoComment{} }
+func (m *ProtoComment) String() string            { return proto.CompactTextString(m) }
+func (*ProtoComment) ProtoMessage()               {}
+func (*ProtoComment) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{10} }
 
 func (m *ProtoComment) GetText() string {
 	if m != nil && m.Text != nil {
@@ -644,9 +720,10 @@ type ProtoTable struct {
 	XXX_unrecognized []byte           `json:"-"`
 }
 
-func (m *ProtoTable) Reset()         { *m = ProtoTable{} }
-func (m *ProtoTable) String() string { return proto.CompactTextString(m) }
-func (*ProtoTable) ProtoMessage()    {}
+func (m *ProtoTable) Reset()                    { *m = ProtoTable{} }
+func (m *ProtoTable) String() string            { return proto.CompactTextString(m) }
+func (*ProtoTable) ProtoMessage()               {}
+func (*ProtoTable) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{11} }
 
 func (m *ProtoTable) GetHeaders() *ProtoTableRow {
 	if m != nil {
@@ -669,9 +746,10 @@ type ProtoTableRow struct {
 	XXX_unrecognized []byte   `json:"-"`
 }
 
-func (m *ProtoTableRow) Reset()         { *m = ProtoTableRow{} }
-func (m *ProtoTableRow) String() string { return proto.CompactTextString(m) }
-func (*ProtoTableRow) ProtoMessage()    {}
+func (m *ProtoTableRow) Reset()                    { *m = ProtoTableRow{} }
+func (m *ProtoTableRow) String() string            { return proto.CompactTextString(m) }
+func (*ProtoTableRow) ProtoMessage()               {}
+func (*ProtoTableRow) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{12} }
 
 func (m *ProtoTableRow) GetCells() []string {
 	if m != nil {
@@ -693,9 +771,10 @@ type ProtoStepExecutionResult struct {
 	XXX_unrecognized []byte            `json:"-"`
 }
 
-func (m *ProtoStepExecutionResult) Reset()         { *m = ProtoStepExecutionResult{} }
-func (m *ProtoStepExecutionResult) String() string { return proto.CompactTextString(m) }
-func (*ProtoStepExecutionResult) ProtoMessage()    {}
+func (m *ProtoStepExecutionResult) Reset()                    { *m = ProtoStepExecutionResult{} }
+func (m *ProtoStepExecutionResult) String() string            { return proto.CompactTextString(m) }
+func (*ProtoStepExecutionResult) ProtoMessage()               {}
+func (*ProtoStepExecutionResult) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{13} }
 
 func (m *ProtoStepExecutionResult) GetExecutionResult() *ProtoExecutionResult {
 	if m != nil {
@@ -747,13 +826,18 @@ type ProtoExecutionResult struct {
 	// / Holds the time taken for executing this scenario.
 	ExecutionTime *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
 	// / Additional information at exec time to be available on reports
-	Message          []string `protobuf:"bytes,7,rep,name=message" json:"message,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	Message []string `protobuf:"bytes,7,rep,name=message" json:"message,omitempty"`
+	// / Type of the Error. Valid values: ASSERTION, VERIFICATION. Default: ASSERTION
+	ErrorType        *ProtoExecutionResult_ErrorType `protobuf:"varint,8,opt,name=errorType,enum=gauge.messages.ProtoExecutionResult_ErrorType,def=1" json:"errorType,omitempty"`
+	XXX_unrecognized []byte                          `json:"-"`
 }
 
-func (m *ProtoExecutionResult) Reset()         { *m = ProtoExecutionResult{} }
-func (m *ProtoExecutionResult) String() string { return proto.CompactTextString(m) }
-func (*ProtoExecutionResult) ProtoMessage()    {}
+func (m *ProtoExecutionResult) Reset()                    { *m = ProtoExecutionResult{} }
+func (m *ProtoExecutionResult) String() string            { return proto.CompactTextString(m) }
+func (*ProtoExecutionResult) ProtoMessage()               {}
+func (*ProtoExecutionResult) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{14} }
+
+const Default_ProtoExecutionResult_ErrorType ProtoExecutionResult_ErrorType = ProtoExecutionResult_ASSERTION
 
 func (m *ProtoExecutionResult) GetFailed() bool {
 	if m != nil && m.Failed != nil {
@@ -804,6 +888,13 @@ func (m *ProtoExecutionResult) GetMessage() []string {
 	return nil
 }
 
+func (m *ProtoExecutionResult) GetErrorType() ProtoExecutionResult_ErrorType {
+	if m != nil && m.ErrorType != nil {
+		return *m.ErrorType
+	}
+	return Default_ProtoExecutionResult_ErrorType
+}
+
 // / A proto object representing a pre-hook failure.
 // / Used to hold failure information for before_suite, before_spec, before_scenario and before_spec hooks.
 type ProtoHookFailure struct {
@@ -816,9 +907,10 @@ type ProtoHookFailure struct {
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (m *ProtoHookFailure) Reset()         { *m = ProtoHookFailure{} }
-func (m *ProtoHookFailure) String() string { return proto.CompactTextString(m) }
-func (*ProtoHookFailure) ProtoMessage()    {}
+func (m *ProtoHookFailure) Reset()                    { *m = ProtoHookFailure{} }
+func (m *ProtoHookFailure) String() string            { return proto.CompactTextString(m) }
+func (*ProtoHookFailure) ProtoMessage()               {}
+func (*ProtoHookFailure) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{15} }
 
 func (m *ProtoHookFailure) GetStackTrace() string {
 	if m != nil && m.StackTrace != nil {
@@ -869,9 +961,10 @@ type ProtoSuiteResult struct {
 	XXX_unrecognized  []byte  `json:"-"`
 }
 
-func (m *ProtoSuiteResult) Reset()         { *m = ProtoSuiteResult{} }
-func (m *ProtoSuiteResult) String() string { return proto.CompactTextString(m) }
-func (*ProtoSuiteResult) ProtoMessage()    {}
+func (m *ProtoSuiteResult) Reset()                    { *m = ProtoSuiteResult{} }
+func (m *ProtoSuiteResult) String() string            { return proto.CompactTextString(m) }
+func (*ProtoSuiteResult) ProtoMessage()               {}
+func (*ProtoSuiteResult) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{16} }
 
 func (m *ProtoSuiteResult) GetSpecResults() []*ProtoSpecResult {
 	if m != nil {
@@ -976,9 +1069,10 @@ type ProtoSpecResult struct {
 	XXX_unrecognized     []byte `json:"-"`
 }
 
-func (m *ProtoSpecResult) Reset()         { *m = ProtoSpecResult{} }
-func (m *ProtoSpecResult) String() string { return proto.CompactTextString(m) }
-func (*ProtoSpecResult) ProtoMessage()    {}
+func (m *ProtoSpecResult) Reset()                    { *m = ProtoSpecResult{} }
+func (m *ProtoSpecResult) String() string            { return proto.CompactTextString(m) }
+func (*ProtoSpecResult) ProtoMessage()               {}
+func (*ProtoSpecResult) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{17} }
 
 func (m *ProtoSpecResult) GetProtoSpec() *ProtoSpec {
 	if m != nil {
@@ -1047,9 +1141,10 @@ type ProtoStepValue struct {
 	XXX_unrecognized []byte   `json:"-"`
 }
 
-func (m *ProtoStepValue) Reset()         { *m = ProtoStepValue{} }
-func (m *ProtoStepValue) String() string { return proto.CompactTextString(m) }
-func (*ProtoStepValue) ProtoMessage()    {}
+func (m *ProtoStepValue) Reset()                    { *m = ProtoStepValue{} }
+func (m *ProtoStepValue) String() string            { return proto.CompactTextString(m) }
+func (*ProtoStepValue) ProtoMessage()               {}
+func (*ProtoStepValue) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{18} }
 
 func (m *ProtoStepValue) GetStepValue() string {
 	if m != nil && m.StepValue != nil {
@@ -1073,7 +1168,126 @@ func (m *ProtoStepValue) GetParameters() []string {
 }
 
 func init() {
+	proto.RegisterType((*ProtoSpec)(nil), "gauge.messages.ProtoSpec")
+	proto.RegisterType((*ProtoItem)(nil), "gauge.messages.ProtoItem")
+	proto.RegisterType((*ProtoScenario)(nil), "gauge.messages.ProtoScenario")
+	proto.RegisterType((*Span)(nil), "gauge.messages.Span")
+	proto.RegisterType((*ProtoTableDrivenScenario)(nil), "gauge.messages.ProtoTableDrivenScenario")
+	proto.RegisterType((*ProtoStep)(nil), "gauge.messages.ProtoStep")
+	proto.RegisterType((*ProtoConcept)(nil), "gauge.messages.ProtoConcept")
+	proto.RegisterType((*ProtoTags)(nil), "gauge.messages.ProtoTags")
+	proto.RegisterType((*Fragment)(nil), "gauge.messages.Fragment")
+	proto.RegisterType((*Parameter)(nil), "gauge.messages.Parameter")
+	proto.RegisterType((*ProtoComment)(nil), "gauge.messages.ProtoComment")
+	proto.RegisterType((*ProtoTable)(nil), "gauge.messages.ProtoTable")
+	proto.RegisterType((*ProtoTableRow)(nil), "gauge.messages.ProtoTableRow")
+	proto.RegisterType((*ProtoStepExecutionResult)(nil), "gauge.messages.ProtoStepExecutionResult")
+	proto.RegisterType((*ProtoExecutionResult)(nil), "gauge.messages.ProtoExecutionResult")
+	proto.RegisterType((*ProtoHookFailure)(nil), "gauge.messages.ProtoHookFailure")
+	proto.RegisterType((*ProtoSuiteResult)(nil), "gauge.messages.ProtoSuiteResult")
+	proto.RegisterType((*ProtoSpecResult)(nil), "gauge.messages.ProtoSpecResult")
+	proto.RegisterType((*ProtoStepValue)(nil), "gauge.messages.ProtoStepValue")
 	proto.RegisterEnum("gauge.messages.ProtoItem_ItemType", ProtoItem_ItemType_name, ProtoItem_ItemType_value)
 	proto.RegisterEnum("gauge.messages.Fragment_FragmentType", Fragment_FragmentType_name, Fragment_FragmentType_value)
 	proto.RegisterEnum("gauge.messages.Parameter_ParameterType", Parameter_ParameterType_name, Parameter_ParameterType_value)
+	proto.RegisterEnum("gauge.messages.ProtoExecutionResult_ErrorType", ProtoExecutionResult_ErrorType_name, ProtoExecutionResult_ErrorType_value)
+}
+
+func init() { proto.RegisterFile("spec.proto", fileDescriptor3) }
+
+var fileDescriptor3 = []byte{
+	// 1484 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xcc, 0x57, 0x5d, 0x6f, 0x1b, 0x45,
+	0x17, 0x96, 0x77, 0xd7, 0x89, 0xf7, 0xc4, 0x76, 0xdc, 0x69, 0xd4, 0x77, 0xdf, 0xaa, 0xa5, 0xd1,
+	0xaa, 0x55, 0x2d, 0x54, 0x0c, 0x44, 0x02, 0x04, 0x48, 0xa0, 0xaa, 0x49, 0x54, 0x23, 0xb5, 0xa0,
+	0xb1, 0xd5, 0x4a, 0xbd, 0x81, 0x65, 0x33, 0x4d, 0xb7, 0x75, 0x76, 0x57, 0xbb, 0xe3, 0xb4, 0xe5,
+	0x1e, 0x7e, 0x00, 0xb7, 0xfc, 0x19, 0xae, 0x41, 0xe2, 0x27, 0x00, 0x3f, 0x85, 0x33, 0x5f, 0xfb,
+	0xe5, 0x75, 0x12, 0xaa, 0x5e, 0x70, 0xe5, 0x9d, 0x33, 0xcf, 0x9c, 0x99, 0x79, 0xce, 0xc7, 0x33,
+	0x06, 0xc8, 0x53, 0x16, 0x4e, 0xd2, 0x2c, 0xe1, 0x09, 0x19, 0x1e, 0x07, 0xcb, 0x63, 0x36, 0x39,
+	0x61, 0x79, 0x1e, 0x1c, 0xb3, 0xdc, 0xff, 0xcd, 0x02, 0xf7, 0x1b, 0x31, 0x33, 0x43, 0x0c, 0xd9,
+	0x85, 0x2d, 0x81, 0xbd, 0xcf, 0x82, 0xa3, 0x28, 0x3e, 0xf6, 0x3a, 0xbb, 0xd6, 0xd8, 0xa5, 0x55,
+	0x13, 0x79, 0x1f, 0xba, 0x11, 0x67, 0x27, 0xb9, 0x67, 0xed, 0xda, 0xe3, 0xad, 0xbd, 0xff, 0x4f,
+	0xea, 0xfe, 0x26, 0xd2, 0xd7, 0x14, 0x11, 0x54, 0xe1, 0xc8, 0x4d, 0x18, 0x44, 0xf9, 0x3c, 0xf8,
+	0x7e, 0xc1, 0xf6, 0xb3, 0xe8, 0x94, 0xc5, 0x9e, 0x8d, 0x4e, 0x7b, 0xb4, 0x6e, 0x24, 0xf7, 0x61,
+	0x98, 0x66, 0xec, 0x7e, 0x92, 0xbc, 0x38, 0x0c, 0xa2, 0xc5, 0x32, 0x63, 0x9e, 0xb3, 0xdb, 0x41,
+	0xff, 0xbb, 0xad, 0xfe, 0x2b, 0x38, 0xda, 0x58, 0x47, 0xbe, 0x82, 0xed, 0x34, 0xc9, 0x79, 0xd5,
+	0x55, 0xf7, 0x82, 0xae, 0x9a, 0x0b, 0xc9, 0x55, 0xe8, 0x3d, 0x8d, 0x16, 0xec, 0x61, 0x70, 0xc2,
+	0xbc, 0x0d, 0xc9, 0x45, 0x31, 0x26, 0x04, 0x1c, 0x1e, 0x1c, 0xe7, 0xde, 0x26, 0xf2, 0xe0, 0x52,
+	0xf9, 0xed, 0xff, 0xe1, 0x68, 0x32, 0x05, 0x01, 0xe4, 0x0b, 0xe8, 0x09, 0x0a, 0xe6, 0xaf, 0x53,
+	0x26, 0x99, 0x1c, 0xee, 0xf9, 0x6b, 0xd9, 0x9a, 0x4c, 0x35, 0x92, 0x16, 0x6b, 0xc8, 0x7b, 0xe0,
+	0xe4, 0x9c, 0xa5, 0xc8, 0x74, 0x67, 0x2d, 0xd3, 0x33, 0x04, 0x50, 0x09, 0x23, 0x1f, 0xc3, 0x66,
+	0x98, 0xc4, 0x21, 0x4b, 0x39, 0x52, 0x2c, 0x56, 0x5c, 0x6b, 0x5d, 0x71, 0x4f, 0x61, 0xa8, 0x01,
+	0x93, 0x4f, 0xa1, 0x97, 0x87, 0x2c, 0x0e, 0xb2, 0x28, 0xd1, 0xa4, 0x5f, 0x6f, 0xdf, 0x4a, 0x83,
+	0x68, 0x01, 0x27, 0x4f, 0xe0, 0x32, 0x2f, 0x83, 0x68, 0x00, 0x9a, 0xef, 0x71, 0xab, 0x97, 0xf9,
+	0x2a, 0x9e, 0xb6, 0x39, 0x51, 0xd7, 0x39, 0x39, 0x61, 0x31, 0x47, 0xea, 0xcf, 0xba, 0x8e, 0xc4,
+	0x50, 0x03, 0x26, 0x1f, 0x40, 0x57, 0xba, 0xc3, 0xc0, 0x88, 0x55, 0x57, 0xd7, 0x9f, 0x82, 0x2a,
+	0xa0, 0xe0, 0x59, 0x46, 0xb2, 0x77, 0x06, 0xcf, 0x73, 0x04, 0xe8, 0x20, 0x3f, 0x87, 0x9e, 0x09,
+	0x16, 0xe9, 0x81, 0x23, 0x22, 0x30, 0xea, 0x90, 0x2d, 0xd8, 0xd4, 0x47, 0x19, 0x59, 0x6a, 0x20,
+	0xd9, 0x1d, 0xd9, 0xa4, 0x0f, 0x3d, 0x73, 0xa9, 0x91, 0x43, 0xfe, 0x07, 0x97, 0x5b, 0x28, 0x18,
+	0x75, 0x89, 0x0b, 0x5d, 0x39, 0x31, 0xda, 0x10, 0x5e, 0xc5, 0x7e, 0xa3, 0x4d, 0x91, 0x50, 0x83,
+	0x1a, 0xf9, 0x64, 0x0c, 0xdb, 0x86, 0xfe, 0x7a, 0x95, 0x36, 0xcd, 0xe4, 0x0a, 0x6c, 0x3c, 0xc5,
+	0x3c, 0x66, 0x47, 0x98, 0x40, 0xa2, 0xe2, 0xf4, 0x88, 0x7c, 0x04, 0x3d, 0x0c, 0x3d, 0x67, 0xaf,
+	0x78, 0x8e, 0x89, 0x72, 0x4e, 0x11, 0x17, 0x50, 0xf2, 0x25, 0x0c, 0xcc, 0x0e, 0x53, 0xd9, 0x00,
+	0x9c, 0xf3, 0xd6, 0xd6, 0xf1, 0x2d, 0x25, 0xde, 0x7d, 0x7b, 0x25, 0xbe, 0xf1, 0xa6, 0x25, 0xde,
+	0x52, 0xc6, 0xa2, 0x65, 0xb1, 0x57, 0x2c, 0x5c, 0xf2, 0x28, 0x89, 0xe7, 0x11, 0xd6, 0xbe, 0xc8,
+	0x0c, 0x9b, 0xd6, 0x8d, 0xc4, 0x83, 0xcd, 0xfc, 0x45, 0x94, 0xa6, 0x48, 0xb0, 0x2b, 0x09, 0x36,
+	0x43, 0xf2, 0x0e, 0x76, 0x5c, 0xfc, 0x3c, 0xc8, 0xb2, 0x24, 0xcb, 0x3d, 0x90, 0x9e, 0x2b, 0x16,
+	0x32, 0x04, 0x6b, 0xba, 0xef, 0x6d, 0xa1, 0x53, 0x97, 0x5a, 0xd1, 0xbe, 0xa0, 0x96, 0xb3, 0x20,
+	0xdb, 0x4f, 0x5e, 0xc6, 0x22, 0x9b, 0x72, 0xaf, 0x7f, 0x2e, 0xb5, 0x35, 0x3c, 0x26, 0x85, 0x93,
+	0xa7, 0x41, 0xec, 0x0d, 0x24, 0x0b, 0x3b, 0xcd, 0x75, 0x33, 0x9c, 0xa3, 0x12, 0xe1, 0x4f, 0x30,
+	0x61, 0xf1, 0x97, 0xec, 0x40, 0x37, 0xe7, 0x41, 0xc6, 0x65, 0xf2, 0xd8, 0x54, 0x0d, 0xc8, 0x08,
+	0x6c, 0x16, 0xab, 0x7c, 0xb1, 0xa9, 0xf8, 0xf4, 0x1f, 0x83, 0xb7, 0xae, 0x6c, 0xc9, 0xe7, 0xe0,
+	0x9a, 0x08, 0xe7, 0xe8, 0xc7, 0x3e, 0xbf, 0x73, 0x94, 0x78, 0xff, 0xaf, 0x8e, 0xd1, 0x1d, 0xd1,
+	0xbb, 0x90, 0xb1, 0x20, 0xe4, 0xcb, 0x60, 0x31, 0xc7, 0x5c, 0xd3, 0x09, 0x5d, 0xb1, 0x88, 0xf9,
+	0x34, 0xc8, 0x72, 0x76, 0x24, 0xe7, 0x2d, 0x35, 0x5f, 0x5a, 0xb0, 0x59, 0xb8, 0x4f, 0xb3, 0xe0,
+	0x58, 0x94, 0x9f, 0x49, 0x6a, 0xaf, 0x79, 0x94, 0x43, 0x0d, 0xa0, 0x25, 0x54, 0x34, 0x30, 0xd1,
+	0x3b, 0x0f, 0x4c, 0x60, 0x29, 0xcb, 0x97, 0x0b, 0xae, 0xdb, 0xe0, 0x78, 0x6d, 0xc7, 0x6d, 0xe0,
+	0x69, 0x9b, 0x13, 0xff, 0xcf, 0x0e, 0xf4, 0xab, 0x1d, 0x17, 0xf9, 0xda, 0xd2, 0x3d, 0x57, 0xf8,
+	0x90, 0xb7, 0x3c, 0xb3, 0xad, 0x57, 0xd1, 0x42, 0x77, 0x73, 0x99, 0x1b, 0xe7, 0xeb, 0xae, 0xc4,
+	0x91, 0xef, 0xe0, 0x8a, 0x5e, 0xdf, 0xbc, 0x9d, 0xfd, 0x2f, 0x6f, 0xb7, 0xc6, 0x8f, 0x7f, 0x43,
+	0x47, 0x50, 0xf4, 0xaa, 0xa2, 0x8e, 0x3a, 0x15, 0x39, 0xfc, 0xbd, 0x03, 0x3d, 0xc3, 0x3a, 0x99,
+	0x42, 0xdf, 0xf0, 0x5e, 0x51, 0xc4, 0x5b, 0xeb, 0xa2, 0x54, 0x7c, 0x48, 0x51, 0xac, 0x2d, 0x95,
+	0x7b, 0xa9, 0x3c, 0xe8, 0xc8, 0xbd, 0x44, 0x06, 0x7c, 0x02, 0x2e, 0xe6, 0x03, 0x0a, 0x33, 0x67,
+	0x99, 0xbe, 0xe1, 0x2a, 0x47, 0x06, 0x40, 0x4b, 0xac, 0x7f, 0x1b, 0xfa, 0xd5, 0xad, 0x64, 0xf3,
+	0x45, 0x87, 0xd8, 0xd2, 0x07, 0x78, 0x3f, 0x03, 0x1b, 0x59, 0xfe, 0xcf, 0x56, 0x65, 0x4c, 0x1e,
+	0xc0, 0xa0, 0xf0, 0x51, 0xb9, 0xcf, 0xed, 0xb5, 0x7b, 0x96, 0x5f, 0xf2, 0x46, 0xf5, 0xd5, 0xa2,
+	0x1e, 0x4f, 0x83, 0xc5, 0x92, 0xe9, 0x3b, 0xa9, 0x81, 0xb8, 0x68, 0x2c, 0xde, 0x1e, 0xb6, 0xba,
+	0xa8, 0xf8, 0x2e, 0xf5, 0xcd, 0xb9, 0xa0, 0xbe, 0xf9, 0x4f, 0x50, 0x43, 0x6a, 0x9b, 0x01, 0x6c,
+	0xcc, 0x78, 0xc0, 0xa3, 0x50, 0xe9, 0xd6, 0xfe, 0x6b, 0x74, 0x8c, 0x03, 0x0b, 0xf7, 0x1b, 0x8a,
+	0x67, 0x60, 0x14, 0x2c, 0xbe, 0x9d, 0xf1, 0x0c, 0x45, 0x04, 0xe5, 0xeb, 0x12, 0x0c, 0x8c, 0x4d,
+	0xe9, 0x93, 0x53, 0x4a, 0x55, 0xd7, 0xf7, 0x8b, 0x1c, 0x57, 0xea, 0x6b, 0x42, 0xa3, 0x4a, 0x58,
+	0x7e, 0xfb, 0xaf, 0x00, 0xca, 0x43, 0x61, 0xa0, 0x36, 0x9f, 0xa1, 0x42, 0xb1, 0x2c, 0xd7, 0x15,
+	0x70, 0xfd, 0x8c, 0x1b, 0x24, 0x2f, 0xa9, 0x41, 0x93, 0x0f, 0xc1, 0xc9, 0x92, 0x97, 0xa6, 0x00,
+	0xce, 0x59, 0x25, 0xa1, 0xfe, 0x2d, 0xad, 0x9e, 0xc6, 0x2c, 0x68, 0x0e, 0xd9, 0x62, 0x61, 0xd2,
+	0x54, 0x0d, 0xfc, 0x5f, 0x2d, 0xdd, 0xe5, 0x5a, 0xb2, 0x9f, 0x3c, 0x84, 0x6d, 0xd6, 0x28, 0xa0,
+	0x8e, 0x64, 0xfe, 0x66, 0xeb, 0x09, 0x9a, 0xc5, 0xd3, 0x5c, 0xdc, 0x22, 0x83, 0xd6, 0xdb, 0x93,
+	0x41, 0xfb, 0x4d, 0x65, 0xb0, 0x22, 0x66, 0x4e, 0x5d, 0xcc, 0x50, 0x0c, 0xf5, 0x27, 0x65, 0x41,
+	0x9e, 0xc4, 0x52, 0xb5, 0x5d, 0x5a, 0x37, 0xfa, 0x3f, 0xda, 0xb0, 0xd3, 0x76, 0xff, 0xca, 0x2b,
+	0xa4, 0x53, 0x7b, 0x85, 0xbc, 0x0b, 0xa3, 0x8c, 0x85, 0xc9, 0x29, 0xcb, 0x44, 0x6c, 0xa4, 0x30,
+	0x4a, 0x22, 0x7a, 0x74, 0xc5, 0x4e, 0x30, 0xc9, 0x98, 0xf8, 0x78, 0xa0, 0xee, 0xa3, 0xcb, 0xa1,
+	0x66, 0x93, 0x9a, 0xcb, 0x83, 0xf0, 0xc5, 0x3c, 0x0b, 0x42, 0x55, 0x1b, 0x42, 0x73, 0x0b, 0x8b,
+	0x9c, 0x0f, 0x33, 0x86, 0xf2, 0xf5, 0x2c, 0xe1, 0xf2, 0x0e, 0x7d, 0x5a, 0xb1, 0xac, 0x6a, 0xfe,
+	0x86, 0x14, 0xc1, 0x55, 0xcd, 0xd7, 0xa4, 0xea, 0x07, 0x83, 0x19, 0x92, 0xc7, 0xe0, 0xca, 0xf3,
+	0xc8, 0x5e, 0x20, 0xde, 0x0b, 0xc3, 0xbd, 0xc9, 0x45, 0x12, 0x64, 0x72, 0x60, 0x56, 0x7d, 0xe6,
+	0xde, 0x9d, 0xcd, 0x0e, 0xe8, 0x7c, 0xfa, 0xf5, 0x43, 0x5a, 0xfa, 0xf2, 0xef, 0x80, 0x5b, 0x40,
+	0x44, 0x4b, 0x2a, 0x40, 0x58, 0xbc, 0x23, 0xe8, 0x3f, 0x3a, 0xa0, 0xd3, 0xc3, 0xe9, 0xbd, 0xbb,
+	0xd2, 0x62, 0xf9, 0xa7, 0x30, 0x6a, 0x06, 0xbb, 0x41, 0x8d, 0x16, 0xd7, 0x0a, 0x35, 0x4d, 0x7a,
+	0x95, 0xbc, 0xae, 0xd2, 0x5b, 0xd2, 0x67, 0x37, 0xe9, 0xf3, 0x7f, 0x71, 0xf4, 0xc6, 0xb3, 0x25,
+	0xfe, 0x7f, 0xd1, 0xb1, 0xbf, 0xab, 0xfe, 0x4d, 0xaa, 0x91, 0x79, 0x22, 0xdc, 0x68, 0xd7, 0x9d,
+	0x02, 0x47, 0xab, 0x6b, 0xfe, 0xa3, 0xd5, 0x52, 0x26, 0xb5, 0xd3, 0x4c, 0x6a, 0x71, 0xf8, 0xfc,
+	0x50, 0x0e, 0xef, 0x25, 0xcb, 0x58, 0xa4, 0x9a, 0x35, 0xee, 0xd2, 0x15, 0x7b, 0x5b, 0xc2, 0xb5,
+	0x3c, 0x32, 0xc5, 0x1f, 0xf2, 0x65, 0x18, 0xe2, 0xd1, 0x68, 0xc0, 0x45, 0xd2, 0x59, 0x63, 0x8b,
+	0x56, 0x4d, 0x02, 0xc1, 0xe2, 0xd3, 0x28, 0x4b, 0x62, 0xf9, 0x5f, 0xa9, 0x27, 0x33, 0xbf, 0x6a,
+	0x2a, 0xa4, 0xd9, 0xd5, 0x72, 0x29, 0xe4, 0x1a, 0x57, 0xa5, 0x59, 0xf2, 0x9c, 0x85, 0x5c, 0xfe,
+	0xb9, 0x05, 0xf5, 0x47, 0xbf, 0x62, 0x22, 0xd7, 0xc0, 0xe5, 0x78, 0x02, 0xcc, 0x93, 0x93, 0x14,
+	0xdf, 0xaa, 0x62, 0xbe, 0x34, 0x90, 0x3b, 0x70, 0x49, 0xde, 0x68, 0xa6, 0xba, 0x80, 0xba, 0x6a,
+	0x5f, 0x5e, 0x75, 0x75, 0xc2, 0xff, 0xdb, 0x82, 0xed, 0x46, 0x98, 0xa5, 0x60, 0x1b, 0xd3, 0xd9,
+	0x6f, 0x21, 0xb1, 0xa6, 0xc4, 0xca, 0x86, 0xa4, 0x9f, 0x91, 0x6a, 0x5b, 0x4b, 0x6e, 0x5b, 0x37,
+	0xa2, 0x4c, 0x5e, 0x36, 0x86, 0x6a, 0x34, 0x6c, 0x89, 0x6d, 0x9b, 0x5a, 0x1b, 0x54, 0xf4, 0xa4,
+	0xbe, 0xf6, 0x03, 0x1e, 0x18, 0x25, 0xc9, 0x31, 0xae, 0xb6, 0xf0, 0xd4, 0x32, 0x75, 0xc1, 0xd0,
+	0x56, 0x5a, 0xee, 0x66, 0xbd, 0xe5, 0xee, 0xc1, 0x8e, 0x39, 0x60, 0x8d, 0x5f, 0x57, 0x1e, 0xbe,
+	0x75, 0xce, 0xff, 0xa9, 0x03, 0xc3, 0x42, 0xc3, 0x1e, 0xc9, 0xd7, 0x03, 0x46, 0x30, 0x37, 0x03,
+	0x5d, 0xf6, 0xa5, 0x01, 0x9f, 0xcc, 0x57, 0x8a, 0x27, 0x48, 0xf4, 0x03, 0x3b, 0x2a, 0xd6, 0xe9,
+	0xfa, 0x5f, 0x33, 0xab, 0x9f, 0xe2, 0x6a, 0x46, 0xbd, 0xb5, 0xd5, 0x53, 0x5c, 0x5b, 0xfe, 0x09,
+	0x00, 0x00, 0xff, 0xff, 0x46, 0x69, 0xae, 0x5f, 0x6d, 0x12, 0x00, 0x00,
 }
