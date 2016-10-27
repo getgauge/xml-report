@@ -20,14 +20,15 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/xml-report/gauge_messages"
-	"github.com/getgauge/xml-report/listener"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/xml-report/gauge_messages"
+	"github.com/getgauge/xml-report/listener"
 )
 
 const (

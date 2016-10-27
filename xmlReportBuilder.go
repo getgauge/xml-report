@@ -21,9 +21,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
+
+	"strconv"
 
 	"github.com/getgauge/xml-report/gauge_messages"
 )
@@ -168,12 +169,11 @@ func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResul
 }
 
 func (self *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
-	for i, scenario := range tableDriven.GetScenarios() {
-		ts.Tests += 1
-		*scenario.ScenarioHeading += " " + strconv.Itoa(i)
+	if tableDriven.GetScenario() != nil {
+		scenario := tableDriven.GetScenario()
+		*scenario.ScenarioHeading += " " + strconv.Itoa(int(tableDriven.GetTableRowIndex())+1)
 		self.getScenarioContent(result, scenario, ts)
 	}
-	ts.Tests -= 1
 }
 
 func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hostName string) JUnitTestSuite {

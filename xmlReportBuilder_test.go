@@ -213,11 +213,12 @@ func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
 
 func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	value := gauge_messages.ProtoItem_TableDrivenScenario
-	scenario := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
 	scenario1 := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
-	item := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenarios: []*gauge_messages.ProtoScenario{&scenario, &scenario1}}, ItemType: &value}
-	spec := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item}}
-	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: proto.Int(1), Failed: proto.Bool(false)}
+	scenario2 := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
+	item1 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario1, TableRowIndex: proto.Int32(1)}, ItemType: &value}
+	item2 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario2, TableRowIndex: proto.Int32(2)}, ItemType: &value}
+	spec1 := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item1, item2}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: proto.Int(1), Failed: proto.Bool(false)}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
@@ -232,11 +233,11 @@ func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	c.Assert(suites.Suites[0].Failures, Equals, 0)
 	c.Assert(suites.Suites[0].Package, Equals, "FILENAME")
 	c.Assert(suites.Suites[0].Name, Equals, "HEADING")
-	c.Assert(suites.Suites[0].Tests, Equals, 2)
+	c.Assert(suites.Suites[0].Tests, Equals, 1)
 	c.Assert(suites.Suites[0].Timestamp, Equals, builder.suites.Suites[0].Timestamp)
 	c.Assert(suites.Suites[0].SystemError.Contents, Equals, "")
 	c.Assert(suites.Suites[0].SystemOutput.Contents, Equals, "")
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 2)
-	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario 0")
-	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario 1")
+	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario 2")
+	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario 3")
 }
