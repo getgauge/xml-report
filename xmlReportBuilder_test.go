@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/getgauge/xml-report/gauge_messages"
-	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
@@ -34,9 +33,9 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestToVerifyXmlContent(c *C) {
 	value := gauge_messages.ProtoItem_Scenario
-	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario1")}, ItemType: &value}
-	spec := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item}}
-	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: proto.Int(1), Failed: proto.Bool(false)}
+	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: false, ScenarioHeading: "Scenario1"}, ItemType: value}
+	spec := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{item}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: 1, Failed: false}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
@@ -61,14 +60,14 @@ func (s *MySuite) TestToVerifyXmlContent(c *C) {
 func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 	value := gauge_messages.ProtoItem_Scenario
 	stepType := gauge_messages.ProtoItem_Step
-	result := &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String("something"), StackTrace: proto.String("nice little stacktrace")}
+	result := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "something", StackTrace: "nice little stacktrace"}
 	step := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result}}
-	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step, ItemType: &stepType}}
+	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step, ItemType: stepType}}
 
-	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: proto.Bool(true),
-		ScenarioHeading: proto.String("Scenario1"), ScenarioItems: steps}, ItemType: &value}
-	spec := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item}}
-	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: proto.Int(1), Failed: proto.Bool(true), ScenarioFailedCount: proto.Int(1)}
+	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: true,
+		ScenarioHeading: "Scenario1", ScenarioItems: steps}, ItemType: value}
+	spec := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{item}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: 1, Failed: true, ScenarioFailedCount: 1}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
@@ -99,16 +98,16 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresInExecutionResult(c *C) {
 	value := gauge_messages.ProtoItem_Scenario
 	stepType := gauge_messages.ProtoItem_Step
-	result1 := &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String("fail but don't stop"), StackTrace: proto.String("nice little stacktrace"), RecoverableError: proto.Bool(true)}
-	result2 := &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String("stop here"), StackTrace: proto.String("very easy to trace")}
+	result1 := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "fail but don't stop", StackTrace: "nice little stacktrace", RecoverableError: true}
+	result2 := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "stop here", StackTrace: "very easy to trace"}
 	step1 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result1}}
 	step2 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result2}}
-	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step1, ItemType: &stepType}, &gauge_messages.ProtoItem{Step: step2, ItemType: &stepType}}
+	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step1, ItemType: stepType}, &gauge_messages.ProtoItem{Step: step2, ItemType: stepType}}
 
-	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: proto.Bool(true),
-		ScenarioHeading: proto.String("Scenario1"), ScenarioItems: steps}, ItemType: &value}
-	spec := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item}}
-	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: proto.Int(1), Failed: proto.Bool(true), ScenarioFailedCount: proto.Int(1)}
+	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: true,
+		ScenarioHeading: "Scenario1", ScenarioItems: steps}, ItemType: value}
+	spec := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{item}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: 1, Failed: true, ScenarioFailedCount: 1}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
@@ -132,26 +131,21 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresWithNestedConcept(c *
 	stepType := gauge_messages.ProtoItem_Step
 	cptType := gauge_messages.ProtoItem_Concept
 
-	err1 := proto.String("fail but don't stop")
-	err2 := proto.String("continue on failure")
-	st1 := proto.String("nice little stacktrace")
-	st2 := proto.String("very easy to trace")
-
-	result1 := &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: err1, StackTrace: st1}
-	result2 := &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: err2, StackTrace: st2}
+	result1 := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "fail but don't stop", StackTrace: "nice little stacktrace"}
+	result2 := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "continue on failure", StackTrace: "very easy to trace"}
 
 	step1 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result1}}
 	step2 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result2}}
-	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step1, ItemType: &stepType}, &gauge_messages.ProtoItem{Step: step2, ItemType: &stepType}}
+	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step1, ItemType: stepType}, &gauge_messages.ProtoItem{Step: step2, ItemType: stepType}}
 
-	cpt1 := &gauge_messages.ProtoItem{Concept: &gauge_messages.ProtoConcept{Steps: steps}, ItemType: &cptType}
-	cpt2 := &gauge_messages.ProtoItem{Concept: &gauge_messages.ProtoConcept{Steps: append(steps, cpt1)}, ItemType: &cptType}
+	cpt1 := &gauge_messages.ProtoItem{Concept: &gauge_messages.ProtoConcept{Steps: steps}, ItemType: cptType}
+	cpt2 := &gauge_messages.ProtoItem{Concept: &gauge_messages.ProtoConcept{Steps: append(steps, cpt1)}, ItemType: cptType}
 
-	scenario := &gauge_messages.ProtoScenario{Failed: proto.Bool(true), ScenarioHeading: proto.String("Scenario1"), ScenarioItems: append(steps, cpt2)}
-	scenItem := &gauge_messages.ProtoItem{Scenario: scenario, ItemType: &scenType}
+	scenario := &gauge_messages.ProtoScenario{Failed: true, ScenarioHeading: "Scenario1", ScenarioItems: append(steps, cpt2)}
+	scenItem := &gauge_messages.ProtoItem{Scenario: scenario, ItemType: scenType}
 
-	spec := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{scenItem}}
-	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: proto.Int(1), Failed: proto.Bool(true), ScenarioFailedCount: proto.Int(1)}
+	spec := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{scenItem}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec, ScenarioCount: 1, Failed: true, ScenarioFailedCount: 1}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
@@ -188,7 +182,7 @@ func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
 	c.Assert(info.Message, Equals, "")
 	c.Assert(info.Err, Equals, "")
 
-	failure := &gauge_messages.ProtoHookFailure{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage")}
+	failure := &gauge_messages.ProtoHookFailure{StackTrace: "StackTrace", ErrorMessage: "ErrorMessage"}
 	hookInfo := builder.getFailureFromExecutionResult("", failure, nil, nil, "PREFIX ")
 
 	c.Assert(hookInfo.Message, Equals, "PREFIX "+preHookFailureMsg+": 'ErrorMessage'")
@@ -204,7 +198,7 @@ func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
 	c.Assert(hookInfo.Message, Equals, "Foo\nPREFIX "+postHookFailureMsg+": 'ErrorMessage'")
 	c.Assert(hookInfo.Err, Equals, "StackTrace")
 
-	executionFailure := &gauge_messages.ProtoExecutionResult{StackTrace: proto.String("StackTrace"), ErrorMessage: proto.String("ErrorMessage"), Failed: proto.Bool(true)}
+	executionFailure := &gauge_messages.ProtoExecutionResult{StackTrace: "StackTrace", ErrorMessage: "ErrorMessage", Failed: true}
 	execInfo := builder.getFailureFromExecutionResult("Foo", nil, nil, executionFailure, "PREFIX ")
 
 	c.Assert(execInfo.Message, Equals, "Foo\nPREFIX "+executionFailureMsg+": 'ErrorMessage'")
@@ -213,12 +207,12 @@ func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
 
 func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	value := gauge_messages.ProtoItem_TableDrivenScenario
-	scenario1 := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
-	scenario2 := gauge_messages.ProtoScenario{Failed: proto.Bool(false), ScenarioHeading: proto.String("Scenario")}
-	item1 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario1, TableRowIndex: proto.Int32(1)}, ItemType: &value}
-	item2 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario2, TableRowIndex: proto.Int32(2)}, ItemType: &value}
-	spec1 := &gauge_messages.ProtoSpec{SpecHeading: proto.String("HEADING"), FileName: proto.String("FILENAME"), Items: []*gauge_messages.ProtoItem{item1, item2}}
-	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: proto.Int(1), Failed: proto.Bool(false)}
+	scenario1 := gauge_messages.ProtoScenario{Failed: false, ScenarioHeading: "Scenario"}
+	scenario2 := gauge_messages.ProtoScenario{Failed: false, ScenarioHeading: "Scenario"}
+	item1 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario1, TableRowIndex: 1}, ItemType: value}
+	item2 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario2, TableRowIndex: 2}, ItemType: value}
+	spec1 := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{item1, item2}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: 1, Failed: false}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
