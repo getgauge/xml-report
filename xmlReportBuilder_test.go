@@ -21,11 +21,15 @@ import (
 	"encoding/xml"
 	"testing"
 
+	"path/filepath"
+
 	"github.com/getgauge/xml-report/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func Test(t *testing.T) {
+	TestingT(t)
+}
 
 type MySuite struct{}
 
@@ -234,4 +238,43 @@ func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 2)
 	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario 2")
 	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario 3")
+}
+
+func (s *MySuite) TestToVerifyXmlContentForErroredSpec(c *C) {
+	value := gauge_messages.ProtoItem_TableDrivenScenario
+	scenario1 := gauge_messages.ProtoScenario{Failed: false, ScenarioHeading: "Scenario"}
+	item1 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario1, TableRowIndex: 1}, ItemType: value}
+	spec1 := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{item1}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: 1, Failed: true, Errors: []*gauge_messages.Error{{Type: gauge_messages.Error_PARSE_ERROR, Message: "message"}}}
+	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
+	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
+
+	builder := &XmlBuilder{currentId: 0}
+	bytes, err := builder.getXmlContent(message)
+	var suites JUnitTestSuites
+	xml.Unmarshal(bytes, &suites)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(len(suites.Suites[0].TestCases[0].Failures), Equals, 1)
+	c.Assert(*suites.Suites[0].TestCases[0].Failures[0], Equals, JUnitFailure{
+		Message:  "Parse/Validation Errors",
+		Type:     "Parse/Validation Errors",
+		Contents: "[Parse Error] message",
+	})
+}
+
+func (s *MySuite) TestGetSpecNameWhenHeadingIsPresent(c *C) {
+	want := "heading"
+
+	got := getSpecName(&gauge_messages.ProtoSpec{SpecHeading: "heading"})
+
+	c.Assert(want, Equals, got)
+}
+
+func (s *MySuite) TestGetSpecNameWhenHeadingIsNotPresent(c *C) {
+	want := "example.spec"
+
+	got := getSpecName(&gauge_messages.ProtoSpec{FileName: filepath.Join("specs", "specs1", "example.spec")})
+
+	c.Assert(want, Equals, got)
 }

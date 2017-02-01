@@ -26,6 +26,8 @@ import (
 
 	"strconv"
 
+	"path/filepath"
+
 	"github.com/getgauge/xml-report/gauge_messages"
 )
 
@@ -131,22 +133,49 @@ func (self *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
 		hostName = hostname
 	}
 	ts := self.getTestSuite(result, hostName)
-	if result.GetProtoSpec().GetPreHookFailure() != nil || result.GetProtoSpec().GetPostHookFailure() != nil {
-		ts.Failures += 1
-	}
-	for _, test := range result.GetProtoSpec().GetItems() {
-		if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
-			self.getScenarioContent(result, test.GetScenario(), &ts)
-		} else if test.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
-			self.getTableDrivenScenarioContent(result, test.GetTableDrivenScenario(), &ts)
+	if len(result.Errors) > 0 {
+		ts.Failures++
+		ts.TestCases = append(ts.TestCases, getErrorTestCase(result))
+	} else {
+		if result.GetProtoSpec().GetPreHookFailure() != nil || result.GetProtoSpec().GetPostHookFailure() != nil {
+			ts.Failures += 1
+		}
+		for _, test := range result.GetProtoSpec().GetItems() {
+			if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
+				self.getScenarioContent(result, test.GetScenario(), &ts)
+			} else if test.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
+				self.getTableDrivenScenarioContent(result, test.GetTableDrivenScenario(), &ts)
+			}
 		}
 	}
 	self.suites.Suites = append(self.suites.Suites, ts)
 }
+func getErrorTestCase(result *gauge_messages.ProtoSpecResult) JUnitTestCase {
+	var failures []string
+	for _, e := range result.Errors {
+		t := "Parse"
+		if e.Type == gauge_messages.Error_VALIDATION_ERROR {
+			t = "Validation"
+		}
+		failures = append(failures, fmt.Sprintf("[%s Error] %s", t, e.Message))
+	}
+	return JUnitTestCase{
+		Classname: getSpecName(result.GetProtoSpec()),
+		Name:      getSpecName(result.GetProtoSpec()),
+		Time:      formatTime(int(result.GetExecutionTime())),
+		Failures: []*JUnitFailure{
+			{
+				Message:  "Parse/Validation Errors",
+				Type:     "Parse/Validation Errors",
+				Contents: strings.Join(failures, "\n"),
+			},
+		},
+	}
+}
 
 func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, scenario *gauge_messages.ProtoScenario, ts *JUnitTestSuite) {
 	testCase := JUnitTestCase{
-		Classname: result.GetProtoSpec().GetSpecHeading(),
+		Classname: getSpecName(result.GetProtoSpec()),
 		Name:      scenario.GetScenarioHeading(),
 		Time:      formatTime(int(scenario.GetExecutionTime())),
 		Failures:  nil,
@@ -189,7 +218,7 @@ func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hos
 		Failures:         int(result.GetScenarioFailedCount()),
 		Time:             formatTime(int(result.GetExecutionTime())),
 		Timestamp:        formattedNow,
-		Name:             result.GetProtoSpec().GetSpecHeading(),
+		Name:             getSpecName(result.GetProtoSpec()),
 		Errors:           0,
 		Hostname:         hostName,
 		Package:          result.GetProtoSpec().GetFileName(),
@@ -250,6 +279,13 @@ func (self *XmlBuilder) getFailureFromExecutionResult(name string, preHookFailur
 		return StepFailure{Message: fmt.Sprintf("%s%s%s: '%s'", name, prefix, executionFailureMsg, stepExecutionResult.GetErrorMessage()), Err: stepExecutionResult.GetStackTrace()}
 	}
 	return StepFailure{"", ""}
+}
+
+func getSpecName(spec *gauge_messages.ProtoSpec) string {
+	if strings.TrimSpace(spec.SpecHeading) == "" {
+		return filepath.Base(spec.GetFileName())
+	}
+	return spec.SpecHeading
 }
 
 func formatTime(time int) string {
