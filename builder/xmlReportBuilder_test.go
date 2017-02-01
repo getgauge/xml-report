@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with getgauge/xml-report.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package builder
 
 import (
 	"encoding/xml"
@@ -23,9 +23,27 @@ import (
 
 	"path/filepath"
 
+	"io/ioutil"
+
 	"github.com/getgauge/xml-report/gauge_messages"
+	"github.com/lestrrat/go-libxml2"
+	"github.com/lestrrat/go-libxml2/parser"
+	"github.com/lestrrat/go-libxml2/xsd"
 	. "gopkg.in/check.v1"
 )
+
+var junitSchema *xsd.Schema
+
+func init() {
+	schema, err := ioutil.ReadFile(filepath.Join("_testdata", "junit.xsd"))
+	if err != nil {
+		panic(err)
+	}
+	junitSchema, err = xsd.Parse(schema)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func Test(t *testing.T) {
 	TestingT(t)
@@ -44,7 +62,10 @@ func (s *MySuite) TestToVerifyXmlContent(c *C) {
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
 	builder := &XmlBuilder{currentId: 0}
-	bytes, err := builder.getXmlContent(message)
+	bytes, err := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
 	var suites JUnitTestSuites
 	xml.Unmarshal(bytes, &suites)
 
@@ -66,7 +87,7 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 	stepType := gauge_messages.ProtoItem_Step
 	result := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "something", StackTrace: "nice little stacktrace"}
 	step := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result}}
-	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step, ItemType: stepType}}
+	steps := []*gauge_messages.ProtoItem{{Step: step, ItemType: stepType}}
 
 	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: true,
 		ScenarioHeading: "Scenario1", ScenarioItems: steps}, ItemType: value}
@@ -76,7 +97,10 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
 	builder := &XmlBuilder{currentId: 0}
-	bytes, err := builder.getXmlContent(message)
+	bytes, err := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
 	var suites JUnitTestSuites
 	xml.Unmarshal(bytes, &suites)
 
@@ -106,7 +130,7 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresInExecutionResult(c *
 	result2 := &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "stop here", StackTrace: "very easy to trace"}
 	step1 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result1}}
 	step2 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result2}}
-	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step1, ItemType: stepType}, &gauge_messages.ProtoItem{Step: step2, ItemType: stepType}}
+	steps := []*gauge_messages.ProtoItem{{Step: step1, ItemType: stepType}, {Step: step2, ItemType: stepType}}
 
 	item := &gauge_messages.ProtoItem{Scenario: &gauge_messages.ProtoScenario{Failed: true,
 		ScenarioHeading: "Scenario1", ScenarioItems: steps}, ItemType: value}
@@ -116,7 +140,10 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresInExecutionResult(c *
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
 	builder := &XmlBuilder{currentId: 0}
-	bytes, _ := builder.getXmlContent(message)
+	bytes, _ := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
 	var suites JUnitTestSuites
 	xml.Unmarshal(bytes, &suites)
 
@@ -140,7 +167,7 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresWithNestedConcept(c *
 
 	step1 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result1}}
 	step2 := &gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{ExecutionResult: result2}}
-	steps := []*gauge_messages.ProtoItem{&gauge_messages.ProtoItem{Step: step1, ItemType: stepType}, &gauge_messages.ProtoItem{Step: step2, ItemType: stepType}}
+	steps := []*gauge_messages.ProtoItem{{Step: step1, ItemType: stepType}, {Step: step2, ItemType: stepType}}
 
 	cpt1 := &gauge_messages.ProtoItem{Concept: &gauge_messages.ProtoConcept{Steps: steps}, ItemType: cptType}
 	cpt2 := &gauge_messages.ProtoItem{Concept: &gauge_messages.ProtoConcept{Steps: append(steps, cpt1)}, ItemType: cptType}
@@ -154,12 +181,13 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresWithNestedConcept(c *
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
 	builder := &XmlBuilder{currentId: 0}
-	bytes, _ := builder.getXmlContent(message)
+	bytes, _ := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
 	var suites JUnitTestSuites
 	xml.Unmarshal(bytes, &suites)
-	for _, f := range suites.Suites[0].TestCases[0].Failures {
-		println(f.Message)
-	}
+
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 1)
 	c.Assert(suites.Suites[0].TestCases[0].Classname, Equals, "HEADING")
 	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario1")
@@ -221,7 +249,10 @@ func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
 	builder := &XmlBuilder{currentId: 0}
-	bytes, err := builder.getXmlContent(message)
+	bytes, err := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
 	var suites JUnitTestSuites
 	xml.Unmarshal(bytes, &suites)
 
@@ -250,7 +281,10 @@ func (s *MySuite) TestToVerifyXmlContentForErroredSpec(c *C) {
 	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
 
 	builder := &XmlBuilder{currentId: 0}
-	bytes, err := builder.getXmlContent(message)
+	bytes, err := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
 	var suites JUnitTestSuites
 	xml.Unmarshal(bytes, &suites)
 
@@ -277,4 +311,16 @@ func (s *MySuite) TestGetSpecNameWhenHeadingIsNotPresent(c *C) {
 	got := getSpecName(&gauge_messages.ProtoSpec{FileName: filepath.Join("specs", "specs1", "example.spec")})
 
 	c.Assert(want, Equals, got)
+}
+
+func assertXmlValidation(xml []byte, c *C) {
+	doc, err := libxml2.Parse(xml, parser.XMLParseNoNet)
+	c.Assert(err, Equals, nil)
+	err = junitSchema.Validate(doc)
+	if err != nil {
+		for _, e := range err.(xsd.SchemaValidationError).Errors() {
+			println(e.Error())
+		}
+	}
+	c.Assert(err, Equals, nil)
 }

@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/xml-report/builder"
 	"github.com/getgauge/xml-report/gauge_messages"
 	"github.com/getgauge/xml-report/listener"
 )
@@ -49,7 +50,7 @@ var pluginDir string
 
 func createReport(suiteResult *gauge_messages.SuiteExecutionResult) {
 	dir := createReportsDirectory()
-	bytes, err := (&XmlBuilder{currentId: 0}).getXmlContent(suiteResult)
+	bytes, err := builder.NewXmlBuilder(0).GetXmlContent(suiteResult)
 	if err != nil {
 		fmt.Printf("Report generation failed: %s \n", err)
 		os.Exit(1)

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with getgauge/xml-report.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package builder
 
 import (
 	"encoding/xml"
@@ -108,12 +108,16 @@ type XmlBuilder struct {
 	suites    JUnitTestSuites
 }
 
+func NewXmlBuilder(id int) *XmlBuilder {
+	return &XmlBuilder{currentId: id}
+}
+
 type StepFailure struct {
 	Message string
 	Err     string
 }
 
-func (self *XmlBuilder) getXmlContent(executionSuiteResult *gauge_messages.SuiteExecutionResult) ([]byte, error) {
+func (self *XmlBuilder) GetXmlContent(executionSuiteResult *gauge_messages.SuiteExecutionResult) ([]byte, error) {
 	suiteResult := executionSuiteResult.GetSuiteResult()
 	self.suites = JUnitTestSuites{}
 	for _, result := range suiteResult.GetSpecResults() {
