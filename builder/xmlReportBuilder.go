@@ -117,26 +117,26 @@ type StepFailure struct {
 	Err     string
 }
 
-func (self *XmlBuilder) GetXmlContent(executionSuiteResult *gauge_messages.SuiteExecutionResult) ([]byte, error) {
+func (x *XmlBuilder) GetXmlContent(executionSuiteResult *gauge_messages.SuiteExecutionResult) ([]byte, error) {
 	suiteResult := executionSuiteResult.GetSuiteResult()
-	self.suites = JUnitTestSuites{}
+	x.suites = JUnitTestSuites{}
 	for _, result := range suiteResult.GetSpecResults() {
-		self.getSpecContent(result)
+		x.getSpecContent(result)
 	}
-	bytes, err := xml.MarshalIndent(self.suites, "", "\t")
+	bytes, err := xml.MarshalIndent(x.suites, "", "\t")
 	if err != nil {
 		return nil, err
 	}
 	return bytes, nil
 }
 
-func (self *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
-	self.currentId += 1
+func (x *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
+	x.currentId += 1
 	hostName, err := os.Hostname()
 	if err != nil {
 		hostName = hostname
 	}
-	ts := self.getTestSuite(result, hostName)
+	ts := x.getTestSuite(result, hostName)
 	if hasParseErrors(result.Errors) {
 		ts.Failures++
 		ts.TestCases = append(ts.TestCases, getErrorTestCase(result))
@@ -146,13 +146,13 @@ func (self *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
 		}
 		for _, test := range result.GetProtoSpec().GetItems() {
 			if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
-				self.getScenarioContent(result, test.GetScenario(), &ts)
+				x.getScenarioContent(result, test.GetScenario(), &ts)
 			} else if test.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
-				self.getTableDrivenScenarioContent(result, test.GetTableDrivenScenario(), &ts)
+				x.getTableDrivenScenarioContent(result, test.GetTableDrivenScenario(), &ts)
 			}
 		}
 	}
-	self.suites.Suites = append(self.suites.Suites, ts)
+	x.suites.Suites = append(x.suites.Suites, ts)
 }
 func getErrorTestCase(result *gauge_messages.ProtoSpecResult) JUnitTestCase {
 	var failures []string
@@ -175,7 +175,7 @@ func getErrorTestCase(result *gauge_messages.ProtoSpecResult) JUnitTestCase {
 	}
 }
 
-func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, scenario *gauge_messages.ProtoScenario, ts *JUnitTestSuite) {
+func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, scenario *gauge_messages.ProtoScenario, ts *JUnitTestSuite) {
 	testCase := JUnitTestCase{
 		Classname: getSpecName(result.GetProtoSpec()),
 		Name:      scenario.GetScenarioHeading(),
@@ -184,7 +184,7 @@ func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResul
 	}
 	if scenario.GetFailed() {
 		var errors []string
-		failures := self.getFailure(scenario)
+		failures := x.getFailure(scenario)
 		message := "Multiple failures"
 		for _, step := range failures {
 			errors = append(errors, fmt.Sprintf("%s\n%s", step.Message, step.Err))
@@ -206,15 +206,15 @@ func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResul
 	ts.TestCases = append(ts.TestCases, testCase)
 }
 
-func (self *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
+func (x *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
 	if tableDriven.GetScenario() != nil {
 		scenario := tableDriven.GetScenario()
 		scenario.ScenarioHeading += " " + strconv.Itoa(int(tableDriven.GetTableRowIndex())+1)
-		self.getScenarioContent(result, scenario, ts)
+		x.getScenarioContent(result, scenario, ts)
 	}
 }
 
-func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hostName string) JUnitTestSuite {
+func (x *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hostName string) JUnitTestSuite {
 	now := time.Now()
 	formattedNow := fmt.Sprintf(timeStampFormat, now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
 	systemError := SystemErr{}
@@ -222,7 +222,7 @@ func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hos
 		systemError.Contents = fmt.Sprintf("Validation failed, %d Scenarios were skipped.", result.GetScenarioSkippedCount())
 	}
 	return JUnitTestSuite{
-		Id:               int(self.currentId),
+		Id:               int(x.currentId),
 		Tests:            int(result.GetScenarioCount()),
 		Failures:         int(result.GetScenarioFailedCount()),
 		Time:             formatTime(int(result.GetExecutionTime())),
@@ -239,24 +239,24 @@ func (self *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hos
 	}
 }
 
-func (self *XmlBuilder) getFailure(test *gauge_messages.ProtoScenario) []StepFailure {
+func (x *XmlBuilder) getFailure(test *gauge_messages.ProtoScenario) []StepFailure {
 	errInfo := []StepFailure{}
-	hookInfo := self.getFailureFromExecutionResult(test.GetScenarioHeading(), test.GetPreHookFailure(), test.GetPostHookFailure(), nil, "Scenario ")
+	hookInfo := x.getFailureFromExecutionResult(test.GetScenarioHeading(), test.GetPreHookFailure(), test.GetPostHookFailure(), nil, "Scenario ")
 	if hookInfo.Message != "" {
 		return append(errInfo, hookInfo)
 	}
-	contextsInfo := self.getFailureFromSteps(test.GetContexts(), "Step ")
+	contextsInfo := x.getFailureFromSteps(test.GetContexts(), "Step ")
 	if len(contextsInfo) > 0 {
 		errInfo = append(errInfo, contextsInfo...)
 	}
-	stepsInfo := self.getFailureFromSteps(test.GetScenarioItems(), "Step ")
+	stepsInfo := x.getFailureFromSteps(test.GetScenarioItems(), "Step ")
 	if len(stepsInfo) > 0 {
 		errInfo = append(errInfo, stepsInfo...)
 	}
 	return errInfo
 }
 
-func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem, prefix string) []StepFailure {
+func (x *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem, prefix string) []StepFailure {
 	errInfo := []StepFailure{}
 	for _, item := range items {
 		stepInfo := StepFailure{Message: "", Err: ""}
@@ -264,9 +264,9 @@ func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem, p
 			preHookFailure := item.GetStep().GetStepExecutionResult().GetPreHookFailure()
 			postHookFailure := item.GetStep().GetStepExecutionResult().GetPostHookFailure()
 			result := item.GetStep().GetStepExecutionResult().GetExecutionResult()
-			stepInfo = self.getFailureFromExecutionResult(item.GetStep().GetActualText(), preHookFailure, postHookFailure, result, prefix)
+			stepInfo = x.getFailureFromExecutionResult(item.GetStep().GetActualText(), preHookFailure, postHookFailure, result, prefix)
 		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
-			errInfo = append(errInfo, self.getFailureFromSteps(item.GetConcept().GetSteps(), "Concept ")...)
+			errInfo = append(errInfo, x.getFailureFromSteps(item.GetConcept().GetSteps(), "Concept ")...)
 		}
 		if stepInfo.Message != "" {
 			errInfo = append(errInfo, stepInfo)
@@ -275,7 +275,7 @@ func (self *XmlBuilder) getFailureFromSteps(items []*gauge_messages.ProtoItem, p
 	return errInfo
 }
 
-func (self *XmlBuilder) getFailureFromExecutionResult(name string, preHookFailure *gauge_messages.ProtoHookFailure,
+func (x *XmlBuilder) getFailureFromExecutionResult(name string, preHookFailure *gauge_messages.ProtoHookFailure,
 	postHookFailure *gauge_messages.ProtoHookFailure, stepExecutionResult *gauge_messages.ProtoExecutionResult, prefix string) StepFailure {
 	if len(name) > 0 {
 		name = fmt.Sprintf("%s\n", name)
