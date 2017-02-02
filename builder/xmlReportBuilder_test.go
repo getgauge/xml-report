@@ -25,6 +25,8 @@ import (
 
 	"io/ioutil"
 
+	"strings"
+
 	"github.com/getgauge/xml-report/gauge_messages"
 	"github.com/lestrrat/go-libxml2"
 	"github.com/lestrrat/go-libxml2/parser"
@@ -388,9 +390,10 @@ func assertXmlValidation(xml []byte, c *C) {
 	c.Assert(err, Equals, nil)
 	err = junitSchema.Validate(doc)
 	if err != nil {
+		var errors []string
 		for _, e := range err.(xsd.SchemaValidationError).Errors() {
-			println(e.Error())
+			errors = append(errors, e.Error())
 		}
+		c.Assert(err, Equals, nil, Commentf(strings.Join(errors, "\n")))
 	}
-	c.Assert(err, Equals, nil)
 }
