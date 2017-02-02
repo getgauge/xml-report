@@ -137,7 +137,7 @@ func (self *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
 		hostName = hostname
 	}
 	ts := self.getTestSuite(result, hostName)
-	if len(result.Errors) > 0 {
+	if hasParseErrors(result.Errors) {
 		ts.Failures++
 		ts.TestCases = append(ts.TestCases, getErrorTestCase(result))
 	} else {
@@ -290,6 +290,15 @@ func getSpecName(spec *gauge_messages.ProtoSpec) string {
 		return filepath.Base(spec.GetFileName())
 	}
 	return spec.SpecHeading
+}
+
+func hasParseErrors(errors []*gauge_messages.Error) bool {
+	for _, e := range errors {
+		if e.Type == gauge_messages.Error_PARSE_ERROR {
+			return true
+		}
+	}
+	return false
 }
 
 func formatTime(time int) string {
