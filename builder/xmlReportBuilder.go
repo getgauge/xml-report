@@ -72,7 +72,7 @@ type JUnitTestCase struct {
 	Name        string            `xml:"name,attr"`
 	Time        string            `xml:"time,attr"`
 	SkipMessage *JUnitSkipMessage `xml:"skipped,omitempty"`
-	Failures    []*JUnitFailure   `xml:"failure,omitempty"`
+	Failure     *JUnitFailure     `xml:"failure,omitempty"`
 }
 
 type SystemOut struct {
@@ -167,12 +167,10 @@ func getErrorTestCase(result *gauge_messages.ProtoSpecResult) JUnitTestCase {
 		Classname: getSpecName(result.GetProtoSpec()),
 		Name:      getSpecName(result.GetProtoSpec()),
 		Time:      formatTime(int(result.GetExecutionTime())),
-		Failures: []*JUnitFailure{
-			{
-				Message:  "Parse/Validation Errors",
-				Type:     "Parse/Validation Errors",
-				Contents: strings.Join(failures, "\n"),
-			},
+		Failure: &JUnitFailure{
+			Message:  "Parse/Validation Errors",
+			Type:     "Parse/Validation Errors",
+			Contents: strings.Join(failures, "\n"),
 		},
 	}
 }
@@ -182,16 +180,23 @@ func (self *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResul
 		Classname: getSpecName(result.GetProtoSpec()),
 		Name:      scenario.GetScenarioHeading(),
 		Time:      formatTime(int(scenario.GetExecutionTime())),
-		Failures:  nil,
+		Failure:   nil,
 	}
 	if scenario.GetFailed() {
-		testCase.Failures = []*JUnitFailure{}
-		for _, step := range self.getFailure(scenario) {
-			testCase.Failures = append(testCase.Failures, &JUnitFailure{
-				Message:  step.Message,
-				Type:     step.Message,
-				Contents: step.Err,
-			})
+		var errors []string
+		failures := self.getFailure(scenario)
+		message := "Multiple failures"
+		for _, step := range failures {
+			errors = append(errors, fmt.Sprintf("%s\n%s", step.Message, step.Err))
+		}
+		if len(failures) == 1 {
+			message = failures[0].Message
+			errors = []string{failures[0].Err}
+		}
+		testCase.Failure = &JUnitFailure{
+			Message:  message,
+			Type:     message,
+			Contents: strings.Join(errors, "\n\n"),
 		}
 	} else if scenario.GetSkipped() {
 		testCase.SkipMessage = &JUnitSkipMessage{

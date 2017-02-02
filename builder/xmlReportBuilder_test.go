@@ -119,8 +119,8 @@ func (s *MySuite) TestToVerifyXmlContentForFailingExecutionResult(c *C) {
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 1)
 	c.Assert(suites.Suites[0].TestCases[0].Classname, Equals, "HEADING")
 	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario1")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[0].Message, Equals, "Step Execution Failure: 'something'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[0].Contents, Equals, "nice little stacktrace")
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Message, Equals, "Step Execution Failure: 'something'")
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Contents, Equals, "nice little stacktrace")
 }
 
 func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresInExecutionResult(c *C) {
@@ -150,11 +150,13 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresInExecutionResult(c *
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 1)
 	c.Assert(suites.Suites[0].TestCases[0].Classname, Equals, "HEADING")
 	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario1")
-	c.Assert(len(suites.Suites[0].TestCases[0].Failures), Equals, 2)
-	c.Assert(suites.Suites[0].TestCases[0].Failures[0].Message, Equals, "Step Execution Failure: 'fail but don't stop'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[0].Contents, Equals, "nice little stacktrace")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[1].Message, Equals, "Step Execution Failure: 'stop here'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[1].Contents, Equals, "very easy to trace")
+	failure := `Step Execution Failure: 'fail but don't stop'
+nice little stacktrace
+
+Step Execution Failure: 'stop here'
+very easy to trace`
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Message, Equals, "Multiple failures")
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Contents, Equals, failure)
 }
 
 func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresWithNestedConcept(c *C) {
@@ -191,20 +193,25 @@ func (s *MySuite) TestToVerifyXmlContentForMultipleFailuresWithNestedConcept(c *
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 1)
 	c.Assert(suites.Suites[0].TestCases[0].Classname, Equals, "HEADING")
 	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario1")
-	c.Assert(len(suites.Suites[0].TestCases[0].Failures), Equals, 6)
+	failure := `Step Execution Failure: 'fail but don't stop'
+nice little stacktrace
 
-	c.Assert(suites.Suites[0].TestCases[0].Failures[0].Message, Equals, "Step Execution Failure: 'fail but don't stop'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[0].Contents, Equals, "nice little stacktrace")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[1].Message, Equals, "Step Execution Failure: 'continue on failure'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[1].Contents, Equals, "very easy to trace")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[2].Message, Equals, "Concept Execution Failure: 'fail but don't stop'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[2].Contents, Equals, "nice little stacktrace")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[3].Message, Equals, "Concept Execution Failure: 'continue on failure'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[3].Contents, Equals, "very easy to trace")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[4].Message, Equals, "Concept Execution Failure: 'fail but don't stop'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[4].Contents, Equals, "nice little stacktrace")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[5].Message, Equals, "Concept Execution Failure: 'continue on failure'")
-	c.Assert(suites.Suites[0].TestCases[0].Failures[5].Contents, Equals, "very easy to trace")
+Step Execution Failure: 'continue on failure'
+very easy to trace
+
+Concept Execution Failure: 'fail but don't stop'
+nice little stacktrace
+
+Concept Execution Failure: 'continue on failure'
+very easy to trace
+
+Concept Execution Failure: 'fail but don't stop'
+nice little stacktrace
+
+Concept Execution Failure: 'continue on failure'
+very easy to trace`
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Message, Equals, "Multiple failures")
+	c.Assert(suites.Suites[0].TestCases[0].Failure.Contents, Equals, failure)
 }
 
 func (s *MySuite) TestToVerifyXmlContentForFailingHookExecutionResult(c *C) {
@@ -289,8 +296,7 @@ func (s *MySuite) TestToVerifyXmlContentForErroredSpec(c *C) {
 	xml.Unmarshal(bytes, &suites)
 
 	c.Assert(err, Equals, nil)
-	c.Assert(len(suites.Suites[0].TestCases[0].Failures), Equals, 1)
-	c.Assert(*suites.Suites[0].TestCases[0].Failures[0], Equals, JUnitFailure{
+	c.Assert(*suites.Suites[0].TestCases[0].Failure, Equals, JUnitFailure{
 		Message:  "Parse/Validation Errors",
 		Type:     "Parse/Validation Errors",
 		Contents: "[Parse Error] message",
