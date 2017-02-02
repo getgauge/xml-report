@@ -29,7 +29,6 @@ import (
 
 	"github.com/getgauge/xml-report/gauge_messages"
 	"github.com/lestrrat/go-libxml2"
-	"github.com/lestrrat/go-libxml2/parser"
 	"github.com/lestrrat/go-libxml2/xsd"
 	. "gopkg.in/check.v1"
 )
@@ -386,7 +385,7 @@ func (s *MySuite) TestGetErrorTestCase(c *C) {
 }
 
 func assertXmlValidation(xml []byte, c *C) {
-	doc, err := libxml2.Parse(xml, parser.XMLParseNoNet)
+	doc, err := libxml2.Parse(xml)
 	c.Assert(err, Equals, nil)
 	err = junitSchema.Validate(doc)
 	if err != nil {
