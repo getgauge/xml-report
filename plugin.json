@@ -1,6 +1,6 @@
 {
     "id" : "xml-report",
-    "version" : "0.1.4",
+    "version" : "0.2.0",
     "name" : "Xml Report",
     "description" : "Xml reporting plugin",
     "install": {
@@ -15,7 +15,7 @@
     },
     "scope" : ["Execution"],
     "gaugeVersionSupport": {
-        "minimum": "0.6.3",
+        "minimum": "0.8.0",
         "maximum": ""
     }
 }
