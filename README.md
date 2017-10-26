@@ -8,23 +8,18 @@ This is the [xml-report plugin](http://getgauge.io/documentation/user/current/pl
 Install through Gauge
 ---------------------
 ````
-gauge --install xml-report
+gauge install xml-report
 ````
 
 * Installing specific version
 ```
-gauge --install xml-report --plugin-version 0.0.2
+gauge install xml-report --version 0.0.2
 ```
 
 ### Offline installation
 * Download the plugin from [Releases](https://github.com/getgauge/xml-report/releases)
 ```
-gauge --install xml-report --file xml-report-0.0.2-windows.x86_64.zip
-```
-
-### Add to gauge project (after install)
-```
-gauge --add-plugin xml-report
+gauge install xml-report --file xml-report-0.0.2-windows.x86_64.zip
 ```
 License
 -------
