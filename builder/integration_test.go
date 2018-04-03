@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	"github.com/getgauge/xml-report/gauge_messages"
-	"github.com/lestrrat/go-libxml2"
-	"github.com/lestrrat/go-libxml2/xsd"
+	"github.com/lestrrat-go/libxml2"
+	"github.com/lestrrat-go/libxml2/xsd"
 	. "gopkg.in/check.v1"
 )
 
