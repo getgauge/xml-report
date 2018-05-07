@@ -141,9 +141,8 @@ func (x *XmlBuilder) getSpecContent(result *gauge_messages.ProtoSpecResult) {
 		ts.Failures++
 		ts.TestCases = append(ts.TestCases, getErrorTestCase(result))
 	} else {
-		if result.GetProtoSpec().GetPreHookFailure() != nil || result.GetProtoSpec().GetPostHookFailure() != nil {
-			ts.Failures += 1
-		}
+		s := result.GetProtoSpec()
+		ts.Failures += len(s.GetPreHookFailures()) + len(s.GetPostHookFailures())
 		for _, test := range result.GetProtoSpec().GetItems() {
 			if test.GetItemType() == gauge_messages.ProtoItem_Scenario {
 				x.getScenarioContent(result, test.GetScenario(), &ts)
