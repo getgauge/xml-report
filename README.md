@@ -3,9 +3,6 @@ xml-report
 
  [ ![Download Nightly](https://api.bintray.com/packages/gauge/xml-report/Nightly/images/download.svg) ](https://bintray.com/gauge/xml-report/Nightly/_latestVersion) [![Build Status](https://travis-ci.org/getgauge/xml-report.svg?branch=master)](https://travis-ci.org/getgauge/xml-report)
 
-This is the [xml-report plugin](http://getgauge.io/documentation/user/current/plugins/README.html) for [gauge](http://getgauge.io).
-
-
 XML Report plugin creates JUnit XML test result document that can be
 read by tools such as Go, Jenkins. The format of
 XML report is based on [JUnit XML Schema](https://windyroad.com.au/dl/Open%20Source/JUnit.xsd).
