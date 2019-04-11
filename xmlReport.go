@@ -60,7 +60,7 @@ func createReport(suiteResult *gauge_messages.SuiteExecutionResult) {
 		fmt.Printf("Report generation failed: %s \n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Sucessfully generated xml-report to => %s\n", dir)
+	fmt.Printf("Successfully generated xml-report to => %s\n", dir)
 }
 
 func writeResultFile(reportDir string, bytes []byte) error {
