@@ -2,6 +2,7 @@ xml-report
 ==========
 
  [ ![Download Nightly](https://api.bintray.com/packages/gauge/xml-report/Nightly/images/download.svg) ](https://bintray.com/gauge/xml-report/Nightly/_latestVersion) [![Build Status](https://travis-ci.org/getgauge/xml-report.svg?branch=master)](https://travis-ci.org/getgauge/xml-report)
+ [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
 XML Report plugin creates JUnit XML test result document that can be
 read by tools such as Go, Jenkins. The format of
