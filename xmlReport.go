@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getgauge/xml-report/logger"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/xml-report/builder"
 	"github.com/getgauge/xml-report/gauge_messages"
@@ -52,15 +54,13 @@ func createReport(suiteResult *gauge_messages.SuiteExecutionResult) {
 	dir := createReportsDirectory()
 	bytes, err := builder.NewXmlBuilder(0).GetXmlContent(suiteResult)
 	if err != nil {
-		fmt.Printf("Report generation failed: %s \n", err)
-		os.Exit(1)
+		logger.Fatal("Report generation failed: %s \n", err)
 	}
 	err = writeResultFile(dir, bytes)
 	if err != nil {
-		fmt.Printf("Report generation failed: %s \n", err)
-		os.Exit(1)
+		logger.Fatal("Report generation failed: %s \n", err)
 	}
-	fmt.Printf("Successfully generated xml-report to => %s\n", dir)
+	logger.Info("Successfully generated xml-report to => %s\n", dir)
 }
 
 func writeResultFile(reportDir string, bytes []byte) error {
@@ -76,8 +76,7 @@ func createExecutionReport() {
 	os.Chdir(projectRoot)
 	listener, err := listener.NewGaugeListener(GAUGE_HOST, os.Getenv(GAUGE_PORT_ENV))
 	if err != nil {
-		fmt.Println("Could not create the gauge listener")
-		os.Exit(1)
+		logger.Fatal("Could not create the gauge listener")
 	}
 	listener.OnSuiteResult(createReport)
 	listener.Start()
@@ -86,14 +85,12 @@ func createExecutionReport() {
 func findPluginAndProjectRoot() {
 	projectRoot = os.Getenv(common.GaugeProjectRootEnv)
 	if projectRoot == "" {
-		fmt.Printf("Environment variable '%s' is not set. \n", common.GaugeProjectRootEnv)
-		os.Exit(1)
+		logger.Fatal("Environment variable '%s' is not set. \n", common.GaugeProjectRootEnv)
 	}
 	var err error
 	pluginDir, err = os.Getwd()
 	if err != nil {
-		fmt.Printf("Error finding current working directory: %s \n", err)
-		os.Exit(1)
+		logger.Fatal("Error finding current working directory: %s \n", err)
 	}
 }
 
@@ -112,8 +109,7 @@ func createDirectory(dir string) {
 		return
 	}
 	if err := os.MkdirAll(dir, common.NewDirectoryPermissions); err != nil {
-		fmt.Printf("Failed to create directory %s: %s\n", defaultReportsDir, err)
-		os.Exit(1)
+		logger.Fatal("Failed to create directory %s: %s\n", defaultReportsDir, err)
 	}
 }
 
