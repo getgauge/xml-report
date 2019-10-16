@@ -23,13 +23,13 @@ jobs:
         run: |
           brew install pkg-config
 
-      - name: Debug
+      - name: Run tests on macos
         if: matrix.os == 'macos-latest'
         run: |
-          ls /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/libxml2
-          CGO_CFLAGS="-I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/libxml2" go test ./...
+          export CGO_CFLAGS="-I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/libxml2"
+          go test ./...
 
-      - name: Run tests
+      - name: Run tests on linux and windows
         if: matrix.os != 'macos-latest'
         run: |
           go test ./...
