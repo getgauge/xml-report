@@ -1,0 +1,40 @@
+name: tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+
+      - uses: actions/checkout@v1
+
+      - name: Setup go 1.13.1
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.1
+
+      - name: Install pkg-config on ${{ matrix.os }}
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install pkg-config
+
+      - name: Run tests on macos
+        if: matrix.os == 'macos-latest'
+        run: |
+          export CGO_CFLAGS="-I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/include/libxml2"
+          go test ./...
+
+      - name: Run tests on linux and windows
+        if: matrix.os != 'macos-latest'
+        run: |
+          go test ./...
+
+      - name: Build and Install
+        run: |
+          go run build/make.go
+          go run build/make.go --install

@@ -1,7 +1,7 @@
 xml-report
 ==========
 
- [![Build Status](https://travis-ci.org/getgauge/xml-report.svg?branch=master)](https://travis-ci.org/getgauge/xml-report)
+[![Actions Status](https://github.com/getgauge/xml-report/workflows/tests/badge.svg)](https://github.com/getgauge/xml-report/actions)
  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
 XML Report plugin creates JUnit XML test result document that can be
