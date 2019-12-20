@@ -1,21 +1,32 @@
 {
-    "id" : "xml-report",
-    "version" : "0.2.3",
-    "name" : "Xml Report",
-    "description" : "Xml reporting plugin",
+    "id": "xml-report",
+    "version": "0.2.3",
+    "name": "Xml Report",
+    "description": "Xml reporting plugin",
     "install": {
         "windows": [],
         "linux": [],
         "darwin": []
     },
-    "command" : {
-        "windows" : ["bin/xml-report"],
-        "linux" : ["bin/xml-report"],
-        "darwin" : ["bin/xml-report"]
+    "command": {
+        "windows": [
+            "bin/xml-report"
+        ],
+        "linux": [
+            "bin/xml-report"
+        ],
+        "darwin": [
+            "bin/xml-report"
+        ]
     },
-    "scope" : ["Execution"],
+    "scope": [
+        "Execution"
+    ],
     "gaugeVersionSupport": {
-        "minimum": "1.0.6",
+        "minimum": "1.0.7",
         "maximum": ""
-    }
+    },
+    "capabilities": [
+        "grpc_support"
+    ]
 }
