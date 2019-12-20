@@ -27,6 +27,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const tenGB = 1024 * 1024 * 1024 * 10
+
 func main() {
 	findPluginAndProjectRoot()
 	if os.Getenv(pluginActionEnv) == executionAction {
@@ -39,7 +41,7 @@ func main() {
 		if err != nil {
 			logger.Fatal("failed to start server.")
 		}
-		server := grpc.NewServer(grpc.MaxRecvMsgSize(1024 * 1024 * 1024 * 10))
+		server := grpc.NewServer(grpc.MaxRecvMsgSize(tenGB))
 		h := &handler{server: server}
 		gm.RegisterReporterServer(server, h)
 		logger.Info("Listening on port:%d", l.Addr().(*net.TCPAddr).Port)
