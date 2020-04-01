@@ -1,0 +1,71 @@
+name: Release on PR Merge
+
+on: deployment
+
+jobs:
+  release:
+    if: github.event.deployment.environment == 'production'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup go 1.13.1
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13.1
+
+      - name: Install hub
+        uses: geertvdc/setup-hub@master
+
+      - name: Setup git
+        run: |
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+
+      - name: build
+        run: |
+          go run build/make.go --all-platforms
+          go run build/make.go --all-platforms --distro
+
+      - name: Release on github
+        run: |
+          cd deploy
+          if [ -z "$version" ]; then
+            version=$(ls xml-report* | head -1 | sed "s/\.[^\.]*$//" | sed "s/xml-report-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
+          fi
+          echo "::set-env name=VERSION::$version"
+          artifacts=()
+          dir=`pwd`
+          for i in `ls`; do
+              artifacts+="$dir/$i "
+          done
+          cd ..
+          echo "---------------------------"
+          echo "Updating release v$version"
+          echo "---------------------------"
+          echo -e "XML Report v$version\n\n" > desc.txt
+          release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" getgauge xml-report)
+          echo "$release_description" >> desc.txt
+          echo "Creating new draft for release v$version"
+          hub release create -F ./desc.txt "v$version"
+          rm -rf desc.txt
+          echo "Start uploading assets..."
+          for i in `ls $artifacts`; do
+              hub release edit -m "" -a $i "v$version"
+              if [ $? -ne 0 ];then
+                  exit 1
+              fi
+          done
+
+      - name: Update metadata in gauge-repository
+        run: |
+          git clone https://github.com/getgauge/gauge-repository.git
+          cd gauge-repository
+          python update_metadata.py xml-report $VERSION
+          commit_message=$(echo -e "Update xml-report to v$VERSION")
+          git commit -am "$commit_message"
+          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/getgauge/gauge-repository.git" master
+
