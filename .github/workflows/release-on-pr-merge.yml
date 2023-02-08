@@ -3,40 +3,37 @@ name: Release on PR Merge
 on: deployment
 
 jobs:
-  release:
+  release-and-bump-version:
     if: github.event.deployment.environment == 'production'
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
 
-      - name: Setup go 1.13.1
-        uses: actions/setup-go@v1
+      - name: Setup go 1.19
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.13.1
-
-      - name: Install hub
-        uses: geertvdc/setup-hub@master
-
-      - name: Setup git
-        run: |
-          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+          go-version: '>=1.19.0'
 
       - name: build
         run: |
           go run build/make.go --all-platforms
           go run build/make.go --all-platforms --distro
 
-      - name: Release on github
+      - name: Setup git
+        run: |
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+
+      - name: Deploy
         run: |
           cd deploy
           if [ -z "$version" ]; then
             version=$(ls xml-report* | head -1 | sed "s/\.[^\.]*$//" | sed "s/xml-report-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
           fi
-          echo "::set-env name=VERSION::$version"
+          echo "VERSION=$version" >> $GITHUB_ENV
           artifacts=()
           dir=`pwd`
           for i in `ls`; do
@@ -46,11 +43,12 @@ jobs:
           echo "---------------------------"
           echo "Updating release v$version"
           echo "---------------------------"
-          echo -e "XML Report v$version\n\n" > desc.txt
+          echo -e "HTML Report v$version\n\n" > desc.txt
           release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" getgauge xml-report)
           echo "$release_description" >> desc.txt
           echo "Creating new draft for release v$version"
           hub release create -F ./desc.txt "v$version"
+          sleep 10
           rm -rf desc.txt
           echo "Start uploading assets..."
           for i in `ls $artifacts`; do
@@ -69,3 +67,11 @@ jobs:
           git commit -am "$commit_message"
           git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/getgauge/gauge-repository.git" master
 
+
+      - name: Bump up version
+        run: |
+          git clean -dfx
+          git checkout master && git checkout . && git pull --rebase
+          version=$(python update_version.py)
+          git commit -am "Bumping up -> $version"
+          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" master
