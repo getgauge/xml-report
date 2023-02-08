@@ -2,6 +2,15 @@
     "capabilities": [
         "grpc_support"
     ],
+    "id": "xml-report",
+    "version": "0.3.0",
+    "name": "Xml Report",
+    "description": "Xml reporting plugin",
+    "install": {
+        "windows": [],
+        "linux": [],
+        "darwin": []
+    },
     "command": {
         "darwin": [
             "bin/xml-report"
