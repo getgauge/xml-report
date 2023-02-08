@@ -40,7 +40,6 @@ const (
 	xmlReport         = "xml-report"
 	deploy            = "deploy"
 	pluginJSONFile    = "plugin.json"
-	themesDir         = "themes"
 )
 
 var deployDir = filepath.Join(deploy, xmlReport)
@@ -248,7 +247,6 @@ func copyPluginFiles(destDir string) {
 		files[filepath.Join(getBinDir(), xmlReport)] = bin
 	}
 	files[pluginJSONFile] = ""
-	files[themesDir] = themesDir
 	copyFiles(files, destDir)
 }
 
