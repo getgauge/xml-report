@@ -3,9 +3,4 @@ updates:
 - package-ecosystem: gomod
   directory: "/"
   schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: google.golang.org/grpc
-    versions:
-    - 1.35.0
+    interval: weekly
