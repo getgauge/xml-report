@@ -9,4 +9,6 @@
 #Using protoc version 3.0.0
 
 cd gauge-proto
-PATH=$PATH:$GOPATH/bin protoc --go_out=plugins=grpc:../gauge_messages spec.proto messages.proto services.proto
+PATH=$PATH:$GOPATH/bin protoc -I=. --go_out=. --go-grpc_out=. spec.proto messages.proto services.proto
+mv github.com/getgauge/gauge-proto/go/gauge_messages/* ../gauge_messages
+rm -rf github.com/

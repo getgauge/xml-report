@@ -170,7 +170,7 @@ func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, 
 		Time:      formatTime(int(scenario.GetExecutionTime())),
 		Failure:   nil,
 	}
-	if scenario.GetFailed() {
+	if scenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
 		var errors []string
 		failures := x.getFailure(scenario)
 		message := "Multiple failures"
@@ -186,7 +186,7 @@ func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, 
 			Type:     message,
 			Contents: strings.Join(errors, "\n\n"),
 		}
-	} else if scenario.GetSkipped() {
+	} else if scenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 		testCase.SkipMessage = &JUnitSkipMessage{
 			Message: strings.Join(scenario.SkipErrors, "\n"),
 		}
