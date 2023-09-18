@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/getgauge/common v0.0.0-20211105093448-e0aee1ccb217
 	github.com/lestrrat-go/libxml2 v0.0.0-20201123224832-e6d9de61b80d
-	google.golang.org/grpc v1.58.0
+	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 )
