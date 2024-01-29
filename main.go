@@ -12,7 +12,7 @@ import (
 
 	"github.com/getgauge/xml-report/logger"
 
-	gm "github.com/getgauge/xml-report/gauge_messages"
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"google.golang.org/grpc"
 )
 

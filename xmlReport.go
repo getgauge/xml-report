@@ -18,7 +18,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/xml-report/builder"
-	"github.com/getgauge/xml-report/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 )
 
 const (
