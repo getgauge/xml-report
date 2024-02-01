@@ -11,7 +11,7 @@ import (
 
 	"path/filepath"
 
-	"github.com/getgauge/xml-report/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
