@@ -197,7 +197,7 @@ func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, 
 func (x *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
 	if tableDriven.GetScenario() != nil {
 		scenario := tableDriven.GetScenario()
-		scenario.ScenarioHeading += " " + strconv.Itoa(int(tableDriven.GetTableRowIndex())+1)
+		scenario.ScenarioHeading += " " + strconv.Itoa(int(tableDriven.GetScenarioTableRowIndex())+1)
 		x.getScenarioContent(result, scenario, ts)
 	}
 }
