@@ -8,7 +8,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,8 +16,8 @@ import (
 	"github.com/getgauge/xml-report/logger"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/xml-report/builder"
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
+	"github.com/getgauge/xml-report/builder"
 )
 
 const (
@@ -50,7 +49,7 @@ func createReport(suiteResult *gauge_messages.SuiteExecutionResult) {
 
 func writeResultFile(reportDir string, bytes []byte) error {
 	resultPath := filepath.Join(reportDir, resultFile)
-	err := ioutil.WriteFile(resultPath, bytes, common.NewFilePermissions)
+	err := os.WriteFile(resultPath, bytes, common.NewFilePermissions)
 	if err != nil {
 		return fmt.Errorf("failed to copy file: %s %s\n ", resultFile, err)
 	}

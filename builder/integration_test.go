@@ -11,9 +11,8 @@ package builder
 
 import (
 	"encoding/xml"
+	"os"
 	"path/filepath"
-
-	"io/ioutil"
 
 	"strings"
 
@@ -26,7 +25,7 @@ import (
 var junitSchema *xsd.Schema
 
 func init() {
-	schema, err := ioutil.ReadFile(filepath.Join("_testdata", "junit.xsd"))
+	schema, err := os.ReadFile(filepath.Join("_testdata", "junit.xsd"))
 	if err != nil {
 		panic(err)
 	}

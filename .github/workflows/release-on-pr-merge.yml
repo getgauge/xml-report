@@ -10,10 +10,10 @@ jobs:
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
 
@@ -29,24 +29,18 @@ jobs:
 
       - name: Deploy
         run: |
-          cd deploy
           if [ -z "$version" ]; then
-            version=$(ls xml-report* | head -1 | sed "s/\.[^\.]*$//" | sed "s/xml-report-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
+            version=$(cd deploy && ls xml-report* | head -1 | sed "s/\.[^\.]*$//" | sed "s/xml-report-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
-          artifacts=()
-          dir=`pwd`
-          for i in `ls`; do
-              artifacts+="$dir/$i "
-          done
-          cd ..
+
           echo "---------------------------"
           echo "Updating release v$version"
           echo "---------------------------"
-          echo -e "XML Report v$version\n\n" > desc.txt
+          echo -e "Gauge XML Report v$version\n\n" > desc.txt
           release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" getgauge xml-report)
           echo "$release_description" >> desc.txt
-          gh release create "v$version" -F ./desc.txt $artifacts
+          gh release create --title "Gauge XML Report v${version}" --notes-file ./desc.txt "v${version}" deploy/*
 
       - name: Update metadata in gauge-repository
         run: |
