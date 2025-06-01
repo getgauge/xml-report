@@ -6,7 +6,7 @@ require (
 	github.com/getgauge/common v0.0.0-20250301053926-ba211b864d31
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20250512061111-192e0e61344e
 	github.com/lestrrat-go/libxml2 v0.0.0-20240905100032-c934e3fcb9d3
-	google.golang.org/grpc v1.72.0
+	google.golang.org/grpc v1.72.2
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
 
