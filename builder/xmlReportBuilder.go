@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"strconv"
-
 	"path/filepath"
 
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
@@ -197,7 +195,31 @@ func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, 
 func (x *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
 	if tableDriven.GetScenario() != nil {
 		scenario := tableDriven.GetScenario()
-		scenario.ScenarioHeading += " " + strconv.Itoa(int(tableDriven.GetTableRowIndex())+1)
+		rowIndex := tableDriven.GetTableRowIndex()
+
+		// Find the table
+		var table *gauge_messages.ProtoTable
+		items := result.GetProtoSpec().GetItems()
+		for _, item := range items {
+			if item.GetItemType() == gauge_messages.ProtoItem_Table {
+				table = item.GetTable()
+				break
+			}
+		}
+
+		// Get table headers and row values
+		var headerValues []string
+		if table != nil && len(table.GetHeaders().GetCells()) > 0 {
+			headers := table.GetHeaders().GetCells()
+			rowData := table.GetRows()[rowIndex].GetCells()
+
+			// Build header: value pairs
+			for i := 0; i < len(headers); i++ {
+				headerValues = append(headerValues, fmt.Sprintf("[%s: %s]", headers[i], rowData[i]))
+			}
+		}
+
+		scenario.ScenarioHeading += fmt.Sprintf(" %d: %s", rowIndex+1, strings.Join(headerValues, " "))
 		x.getScenarioContent(result, scenario, ts)
 	}
 }
