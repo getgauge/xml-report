@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"strconv"
-
 	"path/filepath"
 
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
@@ -195,11 +193,59 @@ func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, 
 }
 
 func (x *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
-	if tableDriven.GetScenario() != nil {
-		scenario := tableDriven.GetScenario()
-		scenario.ScenarioHeading += " " + strconv.Itoa(int(tableDriven.GetTableRowIndex())+1)
-		x.getScenarioContent(result, scenario, ts)
+	if tableDriven.GetScenario() == nil {
+		return
 	}
+	scenario := tableDriven.GetScenario()
+	rowIndex := tableDriven.GetTableRowIndex()
+
+	var headerValues []string
+
+	if tableDriven.IsScenarioTableDriven {
+		headerValues = buildHeaderValuesFromTable(tableDriven.ScenarioTableRow, int(rowIndex))
+	} else { // tableDriven.IsSpecTableDriven seemed to never be true(?), so we assume in this case.
+		specTable := findSpecTable(result)
+		headerValues = buildHeaderValuesFromTable(specTable, int(rowIndex))
+	}
+
+	scenario.ScenarioHeading += fmt.Sprintf(" %d: %s", rowIndex+1, strings.Join(headerValues, " "))
+	x.getScenarioContent(result, scenario, ts)
+}
+
+// Find spec table as the first ProtoTable in the spec items (there is at most one per spec).
+func findSpecTable(result *gauge_messages.ProtoSpecResult) *gauge_messages.ProtoTable {
+	if result == nil || result.GetProtoSpec() == nil {
+		return nil
+	}
+	for _, item := range result.GetProtoSpec().GetItems() {
+		if item.GetItemType() == gauge_messages.ProtoItem_Table {
+			return item.GetTable()
+		}
+	}
+	return nil
+}
+
+// Builds "[Header: Value]" pairs for the given table and rowIndex.
+func buildHeaderValuesFromTable(table *gauge_messages.ProtoTable, rowIndex int) []string {
+	var headerValues []string
+	if table == nil {
+		return headerValues
+	}
+	headersRow := table.GetHeaders()
+	rows := table.GetRows()
+	if headersRow == nil || len(headersRow.GetCells()) == 0 || len(rows) == 0 {
+		return headerValues
+	}
+	if rowIndex < 0 || rowIndex >= len(rows) {
+		return headerValues
+	}
+	headers := headersRow.GetCells()
+	rowData := rows[rowIndex].GetCells()
+
+	for i := 0; i < len(headers); i++ {
+		headerValues = append(headerValues, fmt.Sprintf("[%s: %s]", headers[i], rowData[i]))
+	}
+	return headerValues
 }
 
 func (x *XmlBuilder) getTestSuite(result *gauge_messages.ProtoSpecResult, hostName string) JUnitTestSuite {
