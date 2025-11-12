@@ -16,7 +16,7 @@
     "description": "Xml reporting plugin",
     "gaugeVersionSupport": {
         "maximum": "",
-        "minimum": "1.6.0"
+        "minimum": "1.6.22"
     },
     "id": "xml-report",
     "install": {
@@ -28,5 +28,5 @@
     "scope": [
         "Execution"
     ],
-    "version": "0.5.3"
+    "version": "0.5.4"
 }

@@ -193,22 +193,24 @@ func (x *XmlBuilder) getScenarioContent(result *gauge_messages.ProtoSpecResult, 
 }
 
 func (x *XmlBuilder) getTableDrivenScenarioContent(result *gauge_messages.ProtoSpecResult, tableDriven *gauge_messages.ProtoTableDrivenScenario, ts *JUnitTestSuite) {
-	if tableDriven.GetScenario() == nil {
+	scenario := tableDriven.GetScenario()
+	if scenario == nil {
 		return
 	}
-	scenario := tableDriven.GetScenario()
-	rowIndex := tableDriven.GetTableRowIndex()
-
-	var headerValues []string
-
+	var tableValues strings.Builder
+	if tableDriven.IsSpecTableDriven {
+		specTable := findSpecTable(result) // SpecTable not included in TableDrivenScenario msg; find it in the spec.
+		rowIndex := tableDriven.GetTableRowIndex()
+		var specTableValues = buildHeaderValuesFromTable(specTable, int(rowIndex))
+		fmt.Fprintf(&tableValues, " SpecRow: %d: %s", rowIndex+1, strings.Join(specTableValues, " "))
+	}
 	if tableDriven.IsScenarioTableDriven {
-		headerValues = buildHeaderValuesFromTable(tableDriven.ScenarioTableRow, int(rowIndex))
-	} else { // tableDriven.IsSpecTableDriven seemed to never be true(?), so we assume in this case.
-		specTable := findSpecTable(result)
-		headerValues = buildHeaderValuesFromTable(specTable, int(rowIndex))
+		rowIndex := tableDriven.GetScenarioTableRowIndex()
+		var scenarioTableValues = buildHeaderValuesFromTable(tableDriven.ScenarioDataTable, int(rowIndex))
+		fmt.Fprintf(&tableValues, " ScnRow: %d: %s", rowIndex+1, strings.Join(scenarioTableValues, " "))
 	}
 
-	scenario.ScenarioHeading += fmt.Sprintf(" %d: %s", rowIndex+1, strings.Join(headerValues, " "))
+	scenario.ScenarioHeading += " |" + tableValues.String()
 	x.getScenarioContent(result, scenario, ts)
 }
 
