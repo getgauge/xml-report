@@ -243,8 +243,8 @@ func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	value := gauge_messages.ProtoItem_TableDrivenScenario
 	scenario1 := gauge_messages.ProtoScenario{ScenarioHeading: "Scenario"}
 	scenario2 := gauge_messages.ProtoScenario{ScenarioHeading: "Scenario"}
-	item1 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario1, TableRowIndex: 0}, ItemType: value}
-	item2 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario2, TableRowIndex: 1}, ItemType: value}
+	item1 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario1, IsSpecTableDriven: true, TableRowIndex: 0}, ItemType: value}
+	item2 := &gauge_messages.ProtoItem{TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenario: &scenario2, IsSpecTableDriven: true, TableRowIndex: 1}, ItemType: value}
 	spec1 := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{tableItem, item1, item2}}
 	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: 1, Failed: false}
 	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
@@ -269,8 +269,145 @@ func (s *MySuite) TestToVerifyXmlContentForDataTableDrivenExecution(c *C) {
 	c.Assert(suites.Suites[0].SystemError.Contents, Equals, "")
 	c.Assert(suites.Suites[0].SystemOutput.Contents, Equals, "")
 	c.Assert(len(suites.Suites[0].TestCases), Equals, 2)
-	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario 1: [name: john] [age: 20]")
-	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario 2: [name: mike] [age: 22]")
+	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario | SpecRow: 1: [name: john] [age: 20]")
+	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario | SpecRow: 2: [name: mike] [age: 22]")
+}
+
+func (s *MySuite) TestToVerifyXmlContentForScenarioTableDrivenExecution(c *C) {
+	scenarioTable := &gauge_messages.ProtoTable{
+		Headers: &gauge_messages.ProtoTableRow{
+			Cells: []string{"city", "country"},
+		},
+		Rows: []*gauge_messages.ProtoTableRow{
+			{Cells: []string{"New York", "USA"}},
+			{Cells: []string{"London", "UK"}},
+		},
+	}
+
+	value := gauge_messages.ProtoItem_TableDrivenScenario
+	scenario1 := gauge_messages.ProtoScenario{ScenarioHeading: "Scenario"}
+	scenario2 := gauge_messages.ProtoScenario{ScenarioHeading: "Scenario"}
+	item1 := &gauge_messages.ProtoItem{
+		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{
+			Scenario:              &scenario1,
+			IsScenarioTableDriven: true,
+			ScenarioTableRowIndex: 0,
+			ScenarioDataTable:     scenarioTable,
+		},
+		ItemType: value,
+	}
+	item2 := &gauge_messages.ProtoItem{
+		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{
+			Scenario:              &scenario2,
+			IsScenarioTableDriven: true,
+			ScenarioTableRowIndex: 1,
+			ScenarioDataTable:     scenarioTable,
+		},
+		ItemType: value,
+	}
+	spec1 := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{item1, item2}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: 1, Failed: false}
+	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
+	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
+
+	builder := &XmlBuilder{currentId: 0}
+	bytes, err := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
+	var suites JUnitTestSuites
+	xml.Unmarshal(bytes, &suites)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(len(suites.Suites), Equals, 1)
+	c.Assert(suites.Suites[0].Errors, Equals, 0)
+	c.Assert(suites.Suites[0].Failures, Equals, 0)
+	c.Assert(suites.Suites[0].Package, Equals, "FILENAME")
+	c.Assert(suites.Suites[0].Name, Equals, "HEADING")
+	c.Assert(suites.Suites[0].Tests, Equals, 1)
+	c.Assert(suites.Suites[0].Timestamp, Equals, builder.suites.Suites[0].Timestamp)
+	c.Assert(suites.Suites[0].SystemError.Contents, Equals, "")
+	c.Assert(suites.Suites[0].SystemOutput.Contents, Equals, "")
+	c.Assert(len(suites.Suites[0].TestCases), Equals, 2)
+	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario | ScnRow: 1: [city: New York] [country: USA]")
+	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario | ScnRow: 2: [city: London] [country: UK]")
+}
+
+func (s *MySuite) TestToVerifyXmlContentForBothSpecAndScenarioTableDrivenExecution(c *C) {
+	specTableItem := &gauge_messages.ProtoItem{
+		ItemType: gauge_messages.ProtoItem_Table,
+		Table: &gauge_messages.ProtoTable{
+			Headers: &gauge_messages.ProtoTableRow{
+				Cells: []string{"name", "age"},
+			},
+			Rows: []*gauge_messages.ProtoTableRow{
+				{Cells: []string{"john", "20"}},
+				{Cells: []string{"mike", "22"}},
+			},
+		},
+	}
+
+	scenarioTable := &gauge_messages.ProtoTable{
+		Headers: &gauge_messages.ProtoTableRow{
+			Cells: []string{"city", "country"},
+		},
+		Rows: []*gauge_messages.ProtoTableRow{
+			{Cells: []string{"New York", "USA"}},
+			{Cells: []string{"London", "UK"}},
+		},
+	}
+
+	value := gauge_messages.ProtoItem_TableDrivenScenario
+	scenario1 := gauge_messages.ProtoScenario{ScenarioHeading: "Scenario"}
+	scenario2 := gauge_messages.ProtoScenario{ScenarioHeading: "Scenario"}
+	item1 := &gauge_messages.ProtoItem{
+		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{
+			Scenario:              &scenario1,
+			IsSpecTableDriven:     true,
+			TableRowIndex:         0,
+			IsScenarioTableDriven: true,
+			ScenarioTableRowIndex: 0,
+			ScenarioDataTable:     scenarioTable,
+		},
+		ItemType: value,
+	}
+	item2 := &gauge_messages.ProtoItem{
+		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{
+			Scenario:              &scenario2,
+			IsSpecTableDriven:     true,
+			TableRowIndex:         1,
+			IsScenarioTableDriven: true,
+			ScenarioTableRowIndex: 1,
+			ScenarioDataTable:     scenarioTable,
+		},
+		ItemType: value,
+	}
+	spec1 := &gauge_messages.ProtoSpec{SpecHeading: "HEADING", FileName: "FILENAME", Items: []*gauge_messages.ProtoItem{specTableItem, item1, item2}}
+	specResult := &gauge_messages.ProtoSpecResult{ProtoSpec: spec1, ScenarioCount: 1, Failed: false}
+	suiteResult := &gauge_messages.ProtoSuiteResult{SpecResults: []*gauge_messages.ProtoSpecResult{specResult}}
+	message := &gauge_messages.SuiteExecutionResult{SuiteResult: suiteResult}
+
+	builder := &XmlBuilder{currentId: 0}
+	bytes, err := builder.GetXmlContent(message)
+
+	assertXmlValidation(bytes, c)
+
+	var suites JUnitTestSuites
+	xml.Unmarshal(bytes, &suites)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(len(suites.Suites), Equals, 1)
+	c.Assert(suites.Suites[0].Errors, Equals, 0)
+	c.Assert(suites.Suites[0].Failures, Equals, 0)
+	c.Assert(suites.Suites[0].Package, Equals, "FILENAME")
+	c.Assert(suites.Suites[0].Name, Equals, "HEADING")
+	c.Assert(suites.Suites[0].Tests, Equals, 1)
+	c.Assert(suites.Suites[0].Timestamp, Equals, builder.suites.Suites[0].Timestamp)
+	c.Assert(suites.Suites[0].SystemError.Contents, Equals, "")
+	c.Assert(suites.Suites[0].SystemOutput.Contents, Equals, "")
+	c.Assert(len(suites.Suites[0].TestCases), Equals, 2)
+	c.Assert(suites.Suites[0].TestCases[0].Name, Equals, "Scenario | SpecRow: 1: [name: john] [age: 20] ScnRow: 1: [city: New York] [country: USA]")
+	c.Assert(suites.Suites[0].TestCases[1].Name, Equals, "Scenario | SpecRow: 2: [name: mike] [age: 22] ScnRow: 2: [city: London] [country: UK]")
 }
 
 func (s *MySuite) TestToVerifyXmlContentForErroredSpec(c *C) {
