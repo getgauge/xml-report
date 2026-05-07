@@ -3,10 +3,10 @@ module github.com/getgauge/xml-report
 go 1.26
 
 require (
-	github.com/getgauge/common v0.0.0-20251001154240-471505c641c5
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251001160342-f8a6cc1f6987
-	github.com/lestrrat-go/libxml2 v0.0.0-20240905100032-c934e3fcb9d3
-	google.golang.org/grpc v1.80.0
+	github.com/getgauge/common v0.0.0-20260302065729-fff3970eabd9
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20260501072920-7c87971d2255
+	github.com/lestrrat-go/libxml2 v0.0.0-20260304224138-bb3877930cf7
+	google.golang.org/grpc v1.81.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
 
@@ -19,6 +19,6 @@ require (
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260120221211-b8f7ae30c516 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260504160031-60b97b32f348 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
